@@ -37,6 +37,17 @@ function normalizePreferences(pref){
     density:p.density==="compact"?"compact":"comfortable"
   };
 }
+function themedLogoSvg(){
+  const c=THEME_COLORS[normalizePreferences(profile()?.preferences||defaultPreferences()).themeColor]||THEME_COLORS.indigo;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" aria-hidden="true"><defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${c.primary}"/><stop offset="1" stop-color="${c.primary2}"/></linearGradient></defs><rect width="128" height="128" rx="32" fill="url(#tg)"/><rect x="30" y="36" width="68" height="56" rx="10" fill="none" stroke="white" stroke-width="7"/><path d="M39 36v-7h50l9 7" fill="none" stroke="white" stroke-width="7" stroke-linecap="round"/><circle cx="80" cy="62" r="4" fill="white"/></svg>`;
+}
+function refreshThemeLogos(){
+  const p=normalizePreferences(profile()?.preferences||defaultPreferences());
+  const c=THEME_COLORS[p.themeColor]||THEME_COLORS.indigo;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><defs><linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="${c.primary}"/><stop offset="1" stop-color="${c.primary2}"/></linearGradient></defs><rect width="128" height="128" rx="32" fill="url(#tg)"/><rect x="30" y="36" width="68" height="56" rx="10" fill="none" stroke="white" stroke-width="7"/><path d="M39 36v-7h50l9 7" fill="none" stroke="white" stroke-width="7" stroke-linecap="round"/><circle cx="80" cy="62" r="4" fill="white"/></svg>`;
+  const src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+  $('img[src*="icon.svg"]').attr('src',src);
+}
 function applyPreferences(pref){
   const p=normalizePreferences(pref);
   const root=document.documentElement;
@@ -56,6 +67,7 @@ function applyPreferences(pref){
     btn.attr("title",dark?"Switch to light mode":"Switch to dark mode");
     btn.html(`<i class="bi ${dark?"bi-sun-fill":"bi-moon-stars-fill"}"></i><span class="theme-toggle-label">${dark?"Light":"Dark"}</span>`);
   }
+  refreshThemeLogos();
 }
 function userPreferences(){return normalizePreferences(profile()?.preferences||defaultPreferences())}
 function blankSavings(){
