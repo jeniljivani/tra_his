@@ -81,7 +81,7 @@ button{border:0}
 .login-card{width:min(460px,100%);padding:28px;border-radius:28px;background:#fff;box-shadow:0 25px 70px rgba(30,41,59,.13)}
 .login-logo{width:70px;height:70px;margin:0 auto 14px;display:block}.login-card h1{text-align:center;font-size:28px;font-weight:900}.login-card .lead{text-align:center;color:var(--muted);font-size:14px;margin-bottom:25px}
 .auth-tabs{display:flex;background:#f1f5f9;padding:4px;border-radius:13px;margin-bottom:20px}.auth-tabs button{flex:1;padding:10px;border-radius:10px;background:transparent;font-weight:800;color:var(--muted)}.auth-tabs button.active{background:#fff;color:var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.alertx{border-radius:13px;padding:11px 13px;font-size:13px}
+.alertx{border-radius:13px;padding:11px 13px;font-size:13px}.password-field{position:relative}.password-field .form-control{padding-right:52px}.password-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:11px;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer}.password-toggle:hover{background:var(--primary-soft);color:var(--primary)}.password-toggle:focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 22%,transparent);outline-offset:1px}
 
 /* Savings module */
 .savings-page-head{display:flex;align-items:center;justify-content:space-between;gap:18px}
