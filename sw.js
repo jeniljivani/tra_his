@@ -1,4 +1,4 @@
-const CACHE="trahis-v10";
+const CACHE="trahis-v11";
 const ASSETS=[
 "./","./index.html","./manifest.json","./sw.js",
 "./css/style.css","./js/app.js",

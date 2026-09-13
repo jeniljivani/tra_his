@@ -9,6 +9,7 @@ const DB_KEY = "trahis_state_v5";
 const LEGACY_DB_KEY = "trahis_state_v4";
 const SESSION_KEY = "trahis_session_v1";
 const REMEMBER_KEY = "trahis_remember_user_v1";
+const REMEMBER_SESSION_KEY = "trahis_remember_session_v1";
 const CATS = ["main","emergency","personal","other"];
 const CAT_LABEL = {main:"Main Savings",emergency:"Emergency",personal:"Personal",other:"Other"};
 const THEME_COLORS = {
@@ -275,8 +276,16 @@ function doLogin(username,password,remember){
   const u=state.users.find(x=>String(x.username).toLowerCase()===username.toLowerCase());
   if(!u||u.password!==password)return "Invalid username or password.";
   if(!u.approved)return "Your account is waiting for master admin approval.";
-  state.session=u.id;sessionStorage.setItem(SESSION_KEY,u.id);
-  if(remember)localStorage.setItem(REMEMBER_KEY,u.username);else localStorage.removeItem(REMEMBER_KEY);
+  state.session=u.id;
+  sessionStorage.setItem(SESSION_KEY,u.id);
+  if(remember){
+    localStorage.setItem(REMEMBER_KEY,u.username);
+    localStorage.setItem(REMEMBER_SESSION_KEY,u.id);
+  }else{
+    localStorage.removeItem(REMEMBER_KEY);
+  localStorage.removeItem(REMEMBER_SESSION_KEY);
+    localStorage.removeItem(REMEMBER_SESSION_KEY);
+  }
   return "";
 }
 function logout(){
@@ -383,6 +392,16 @@ $(document).on("click",".chart-range",function(){chartRange=$(this).data("range"
 $(window).on("resize",()=>{if(currentRoute==="dashboard")drawChart($("#miniChart")[0],txs(),chartRange)});
 
 initPWA();
-const storedSession=sessionStorage.getItem(SESSION_KEY);if(storedSession)state.session=storedSession;
+const storedSession=sessionStorage.getItem(SESSION_KEY);
+const rememberedSession=localStorage.getItem(REMEMBER_SESSION_KEY);
+if(storedSession)state.session=storedSession;
+else if(rememberedSession&&state.users.some(u=>u.id===rememberedSession&&u.approved)){
+  state.session=rememberedSession;
+  sessionStorage.setItem(SESSION_KEY,rememberedSession);
+}
+else if(rememberedSession){
+  localStorage.removeItem(REMEMBER_SESSION_KEY);
+  localStorage.removeItem(REMEMBER_KEY);
+}
 if(state.session&&user()&&user().approved){shell();const map={dashboard:renderDashboard,add:renderAdd,transfer:renderTransfer,history:renderHistory,savings:renderSavings,profile:renderProfile,backup:renderBackup,admin:renderAdmin};if(currentRoute==="admin"&&user().role!=="admin"){window.location.href="index.html"}else{(map[currentRoute]||renderDashboard)()}}else{state.session=null;sessionStorage.removeItem(SESSION_KEY);applyPreferences(defaultPreferences());if(currentRoute!=="dashboard"){window.location.href="index.html"}else renderAuth()}
 })();
