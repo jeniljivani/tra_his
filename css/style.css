@@ -89,8 +89,8 @@ button{border:0}
 .savings-hero-card{padding:22px;display:flex;align-items:center;justify-content:space-between;gap:24px;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;border:0;box-shadow:0 16px 35px rgba(37,99,235,.20)}
 .savings-hero-left{min-width:0}.savings-hero-label{font-size:13px;font-weight:800;opacity:.92;display:flex;align-items:center;gap:7px}.savings-hero-amount{font-size:34px;font-weight:900;line-height:1.05;margin-top:7px}.savings-hero-note{font-size:12px;opacity:.78;margin-top:7px}
 .savings-hero-right{min-width:235px;padding-left:22px;border-left:1px solid rgba(255,255,255,.22);text-align:right}.savings-hero-icon{width:48px;height:48px;border-radius:15px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:20px;margin:0 0 10px auto}.savings-available-label{font-size:11px;opacity:.75}.savings-hero-right strong{display:block;font-size:20px;margin-top:2px}
-.savings-setup-card{padding:20px}.savings-section-head h5{margin:0;font-weight:900}.savings-section-head p{margin:5px 0 18px;color:var(--muted);font-size:12px}.savings-input .input-group-text{background:#f8fafc;border-color:#d9e1ec;color:#64748b;font-weight:700}.savings-input .form-control{border-left:0}.savings-input .input-group-text+.form-control{border-left:0}.savings-save-btn{height:47px}.savings-reserve-box{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 15px;background:#f8fafc;border:1px solid var(--line);border-radius:16px}.savings-reserve-box strong{display:block;font-size:18px;margin-top:2px}.savings-category-card{height:100%;padding:17px}.savings-category-card .cat-icon{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-size:20px;margin-bottom:12px}.savings-category-card .cat-name{font-size:12px;color:var(--muted);font-weight:700}.savings-category-card strong{display:block;font-size:19px;margin-top:4px}.savings-action-card{padding:20px}.savings-action-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:17px}.savings-action-icon{width:42px;height:42px;border-radius:13px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;flex:0 0 auto}.savings-action-head h6{margin:0;font-weight:850}.savings-action-head p{margin:4px 0 0;font-size:12px;color:var(--muted)}.savings-budget-card{padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:15px}.budget-title{font-weight:850}
-@media(max-width:600px){.main-shell{padding:82px 12px 95px}.savings-page-head{align-items:flex-start}.savings-head-icon{width:44px;height:44px;font-size:19px}.savings-hero-card{padding:17px;display:block}.savings-hero-amount{font-size:29px}.savings-hero-right{min-width:0;padding:13px 0 0;margin-top:14px;border-left:0;border-top:1px solid rgba(255,255,255,.2);text-align:left}.savings-hero-icon{display:none}.savings-hero-right strong{font-size:18px}.savings-setup-card{padding:16px}.savings-reserve-box{align-items:flex-start;flex-direction:column}.savings-reserve-box .btn{width:100%}.savings-action-card{padding:16px}.savings-budget-card{padding:14px}}
+.savings-setup-card{padding:20px}.savings-section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.savings-section-head h5{margin:0;font-weight:900}.savings-section-head p{margin:5px 0 18px;color:var(--muted);font-size:12px}.savings-reset-btn{white-space:nowrap;font-weight:750}.savings-reset-note{display:flex;align-items:center;gap:6px;line-height:1.45}.savings-input .input-group-text{background:#f8fafc;border-color:#d9e1ec;color:#64748b;font-weight:700}.savings-input .form-control{border-left:0}.savings-input .input-group-text+.form-control{border-left:0}.savings-save-btn{height:47px}.savings-reserve-box{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 15px;background:#f8fafc;border:1px solid var(--line);border-radius:16px}.savings-reserve-box strong{display:block;font-size:18px;margin-top:2px}.savings-category-card{height:100%;padding:17px}.savings-category-card .cat-icon{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-size:20px;margin-bottom:12px}.savings-category-card .cat-name{font-size:12px;color:var(--muted);font-weight:700}.savings-category-card strong{display:block;font-size:19px;margin-top:4px}.savings-action-card{padding:20px}.savings-action-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:17px}.savings-action-icon{width:42px;height:42px;border-radius:13px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;flex:0 0 auto}.savings-action-head h6{margin:0;font-weight:850}.savings-action-head p{margin:4px 0 0;font-size:12px;color:var(--muted)}.savings-budget-card{padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:15px}.budget-title{font-weight:850}
+@media(max-width:600px){.main-shell{padding:82px 12px 95px}.savings-page-head{align-items:flex-start}.savings-head-icon{width:44px;height:44px;font-size:19px}.savings-hero-card{padding:17px;display:block}.savings-hero-amount{font-size:29px}.savings-hero-right{min-width:0;padding:13px 0 0;margin-top:14px;border-left:0;border-top:1px solid rgba(255,255,255,.2);text-align:left}.savings-hero-icon{display:none}.savings-hero-right strong{font-size:18px}.savings-setup-card{padding:16px}.savings-section-head{align-items:flex-start}.savings-reset-btn{min-height:40px}.savings-reserve-box{align-items:flex-start;flex-direction:column}.savings-reserve-box .btn{width:100%}.savings-action-card{padding:16px}.savings-budget-card{padding:14px}}
 /* Multi-page navigation */
 .drawer-nav a{display:flex;align-items:center;gap:13px;padding:14px 15px;border-radius:15px;background:#f8fafc;color:#263247;font-weight:800;text-align:left;cursor:pointer;text-decoration:none}
 .drawer-nav a i{font-size:20px;color:var(--primary)}
@@ -111,6 +111,18 @@ body{overflow-x:hidden}
 .income-bg{background:#dcfce7;color:#15803d}.expense-bg{background:#fee2e2;color:#dc2626}.transfer-bg{background:#e0e7ff;color:#4f46e5}.transfer{color:#4f46e5}
 .tx-copy{min-width:0}.history-right{display:flex;flex-direction:column;align-items:flex-end;flex:0 0 auto}.tx-actions{display:flex;gap:4px;margin-top:5px}.tx-actions .btn{width:34px;height:30px;padding:0;display:grid;place-items:center;border-radius:9px}
 .mini-balance{padding:16px 18px}.mini-balance strong{display:block;font-size:20px;margin-top:3px}
+/* History filtered totals */
+.history-total-card{display:flex;align-items:center;gap:12px;padding:15px 16px;min-height:92px}
+.history-total-icon{width:42px;height:42px;flex:0 0 42px;border-radius:13px;display:grid;place-items:center;font-size:19px}
+.history-total-label{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:2px}
+.history-total-value{font-size:21px;font-weight:900;line-height:1.2}
+.history-total-note{font-size:11px;color:var(--muted);margin-top:3px}
+.income-total .history-total-icon{background:#dcfce7;color:#15803d}
+.expense-total .history-total-icon{background:#fee2e2;color:#dc2626}
+[data-theme="dark"] .income-total .history-total-icon{background:rgba(22,163,74,.18);color:#86efac}
+[data-theme="dark"] .expense-total .history-total-icon{background:rgba(220,38,38,.18);color:#fca5a5}
+@media(max-width:380px){.history-total-card{padding:13px 12px;gap:9px}.history-total-icon{width:36px;height:36px;flex-basis:36px;font-size:16px}.history-total-value{font-size:17px}.history-total-label{font-size:11px}.history-total-note{font-size:10px}}
+
 .history-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 2px 0}.pagination-buttons{display:flex;align-items:center;gap:5px}.history-count{font-size:12px;color:var(--muted)}.page-btn{min-width:36px;height:36px;border:1px solid var(--line);background:#fff;border-radius:10px;color:#475569;font-weight:800}.page-btn:hover:not(:disabled),.page-btn.active{background:var(--primary-soft);color:var(--primary);border-color:#c7d2fe}.page-btn:disabled{opacity:.4;cursor:not-allowed}.page-dots{padding:0 2px;color:#94a3b8}
 .toast-primary{background:#fff;color:var(--ink)}.toast-danger{background:#fff1f2;color:#9f1239}.toast-body{font-weight:700}
 .info-box{background:var(--primary-soft);color:var(--primary);border:1px solid color-mix(in srgb,var(--primary) 14%,transparent)}.error-box{background:#fff1f2;color:#be123c}.success-box{background:#ecfdf5;color:#166534}
@@ -146,8 +158,8 @@ body{overflow-x:hidden}
 .chart-switcher{display:flex;gap:4px;padding:3px;background:var(--primary-soft);border:1px solid var(--line);border-radius:12px}
 .chart-range{border:0;background:transparent;color:var(--muted);font-size:11px;font-weight:800;padding:7px 10px;border-radius:9px;cursor:pointer}
 .chart-range.active{background:var(--card);color:var(--primary);box-shadow:0 2px 7px rgba(15,23,42,.08)}
-.chart-box{height:270px;padding:15px 16px 12px;display:flex;flex-direction:column;gap:5px}
-.chart-caption{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;font-size:12px}.chart-caption strong{font-size:13px}.chart-caption span{color:var(--muted);font-size:11px}.chart-box canvas{flex:1;min-height:0;width:100%;height:100%}
+.chart-box{height:270px;padding:15px 16px 12px;display:flex;flex-direction:column;gap:5px;overflow:hidden}
+.chart-caption{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;font-size:12px}.chart-caption strong{font-size:13px;white-space:nowrap}.chart-caption-right{display:flex;align-items:center;justify-content:flex-end;gap:12px;min-width:0;flex-wrap:wrap}.chart-caption-right>span{color:var(--muted);font-size:11px}.chart-legend{display:inline-flex!important;align-items:center;gap:10px}.chart-legend>span{display:inline-flex;align-items:center;gap:4px;color:var(--muted);font-size:10px!important;font-weight:700}.legend-dot{width:7px;height:7px;border-radius:50%;display:inline-block}.income-dot{background:#16a34a}.expense-dot{background:#ef4444}.chart-scroll{flex:1;min-width:0;min-height:0;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}.chart-scroll canvas{display:block;min-height:0;height:100%}
 .settings-heading{display:flex;align-items:center;justify-content:space-between;gap:15px}.settings-preview-dot{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary2));box-shadow:0 0 0 5px var(--primary-soft)}
 .settings-theme-note{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid var(--line);background:var(--primary-soft);border-radius:14px}.settings-theme-note>i{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--card);color:var(--primary);font-size:17px}
 .density-compact .main-shell{padding-top:82px}.density-compact .cardx{border-radius:18px}.density-compact .stat-card{min-height:104px;padding:14px}.density-compact .balance-row{padding:12px 15px}.density-compact .tx-item{padding:11px 13px}.density-compact .section-title{margin:20px 0 9px}.density-compact .form-card{padding:16px}.density-compact .savings-category-card{min-height:105px;padding:14px}.density-compact .savings-action-card{padding:16px}
@@ -193,3 +205,469 @@ html[data-theme="dark"] hr{border-color:#263247}
 .theme-accent-bg{background:var(--primary-soft)!important;color:var(--primary)!important}
 .theme-accent-border{border-color:var(--primary)!important}
 .brand-logo,.drawer-brand-logo{border-radius:10px}
+
+/* Backup Health */
+.backup-head-icon{width:48px;height:48px;border-radius:16px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-size:22px;flex:0 0 auto}
+.backup-health-card{padding:18px}
+.backup-health-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
+.backup-health-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--primary);display:flex;gap:7px;align-items:center}
+.backup-health-status{font-size:25px;font-weight:800;margin-top:3px}
+.health-good{color:#059669}.health-warn{color:#d97706}
+.backup-health-stats{margin:0 -4px 12px}.health-stat{height:100%;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--surface-soft)}
+.health-stat span{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}.health-stat strong{display:block;font-size:13px;line-height:1.25;word-break:break-word}
+.health-ok,.health-issues{border-radius:13px;padding:11px 13px;margin-top:10px;font-size:13px}
+.health-ok{background:#ecfdf5;color:#047857;display:flex;gap:8px;align-items:center}.health-issues{background:#fff7ed;color:#9a3412}.health-issues div{display:flex;gap:8px;align-items:flex-start}.health-issues div+div{margin-top:7px}
+.backup-health-note{display:flex;gap:8px;align-items:flex-start;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+html[data-theme="dark"] .health-ok{background:#052e25;color:#6ee7b7}html[data-theme="dark"] .health-issues{background:#3b2412;color:#fdba74}
+@media(max-width:575.98px){.backup-health-top{align-items:flex-start}.backup-health-status{font-size:22px}.backup-head-icon{display:none}.backup-health-card{padding:15px}}
+
+
+/* ===== TraHis Local AI Assistant ===== */
+.ai-fab{
+  position:fixed;right:18px;bottom:82px;z-index:1050;width:58px;height:58px;border:0;border-radius:50%;
+  color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary2));box-shadow:0 12px 30px rgba(0,0,0,.20);
+  display:flex;align-items:center;justify-content:center;font-size:23px;cursor:pointer;transition:.2s;
+}
+.ai-fab:hover{transform:translateY(-2px);box-shadow:0 15px 34px rgba(0,0,0,.25)}
+.ai-fab .ai-dot{position:absolute;right:2px;top:2px;width:11px;height:11px;border:2px solid #fff;border-radius:50%;background:#22c55e}
+.ai-chat-overlay{position:fixed;inset:0;background:rgba(15,23,42,.42);backdrop-filter:blur(4px);z-index:1060;display:none}
+.ai-chat-overlay.open{display:block}
+.ai-chat{
+  position:absolute;right:18px;bottom:18px;width:min(430px,calc(100% - 24px));height:min(720px,calc(100% - 36px));
+  background:var(--card-bg,#fff);border:1px solid var(--border,#e5e7eb);border-radius:24px;overflow:hidden;
+  box-shadow:0 25px 70px rgba(0,0,0,.28);display:flex;flex-direction:column;color:var(--text,#111827)
+}
+.ai-head{padding:15px 16px;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;display:flex;align-items:center;gap:11px}
+.ai-head .ai-avatar{width:40px;height:40px;border-radius:13px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:21px}
+.ai-head-title{font-weight:800;line-height:1.15}.ai-head-sub{font-size:11px;opacity:.82;margin-top:3px}
+.ai-close{margin-left:auto;border:0;background:transparent;color:#fff;font-size:21px;width:38px;height:38px;border-radius:12px}
+.ai-close:hover{background:rgba(255,255,255,.12)}
+.ai-quickbar{flex:0 0 auto;padding:9px 12px 10px;border-bottom:1px solid var(--border,#e5e7eb);background:var(--card-bg,#fff);box-shadow:0 3px 12px rgba(15,23,42,.06);position:relative;z-index:2}
+.ai-quick-label{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:800;letter-spacing:.02em;color:var(--muted,#64748b);margin:0 2px 7px}
+.ai-quick-label i{color:var(--primary);font-size:11px}
+.ai-body{flex:1;min-height:0;overflow:auto;padding:16px;background:var(--surface,#f8fafc);scroll-behavior:smooth}
+.ai-welcome{font-size:13px;line-height:1.55;margin-bottom:12px}
+.ai-msg{display:flex;margin:9px 0}.ai-msg.user{justify-content:flex-end}
+.ai-bubble{max-width:86%;padding:11px 13px;border-radius:16px 16px 16px 5px;background:var(--card-bg,#fff);border:1px solid var(--border,#e5e7eb);font-size:13px;line-height:1.5;white-space:pre-line}
+.ai-msg.user .ai-bubble{border-radius:16px 16px 5px 16px;background:var(--primary);color:#fff;border-color:var(--primary)}
+.ai-quick{display:flex;gap:7px;overflow-x:auto;padding:0 0 1px;scrollbar-width:none;overscroll-behavior-x:contain}.ai-quick::-webkit-scrollbar{display:none}
+.ai-quick button{white-space:nowrap;border:1px solid var(--border,#e5e7eb);background:var(--card-bg,#fff);color:var(--text,#111827);border-radius:999px;padding:7px 11px;font-size:11px;font-weight:600;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.ai-quick button:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft,#eef2ff)}
+.ai-compose{padding:10px;border-top:1px solid var(--border,#e5e7eb);background:var(--card-bg,#fff);display:flex;gap:8px}
+.ai-compose input{flex:1;min-width:0;border:1px solid var(--border,#d1d5db);border-radius:14px;padding:11px 12px;background:transparent;color:inherit;outline:none}
+.ai-compose input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.ai-send{width:44px;height:44px;border:0;border-radius:13px;background:var(--primary);color:#fff;font-size:17px}
+[data-theme="dark"] .ai-chat{--card-bg:#18212f;--surface:#0f172a;--border:#2d3a4d;--text:#e5e7eb}
+[data-theme="dark"] .ai-quickbar{box-shadow:0 3px 12px rgba(0,0,0,.18)}
+[data-theme="dark"] .ai-bubble{background:#18212f}
+@media(max-width:600px){
+  .ai-fab{right:14px;bottom:78px}
+  .ai-chat-overlay{background:var(--surface,#f8fafc)}
+  .ai-chat{right:0;bottom:0;width:100%;height:100%;max-height:none;border-radius:0;border:0}
+}
+
+/* ===== Settings + Glassmorphism Theme ===== */
+.theme-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.theme-choice{position:relative;display:flex;align-items:center;gap:13px;text-align:left;padding:13px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:18px;cursor:pointer;transition:.18s ease;min-height:92px}
+.theme-choice:hover{border-color:var(--primary);transform:translateY(-1px)}
+.theme-choice.active{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.theme-choice-check{margin-left:auto;color:var(--primary);font-size:18px;opacity:0;transform:scale(.8);transition:.18s ease}
+.theme-choice.active .theme-choice-check{opacity:1;transform:scale(1)}
+.theme-choice-copy{display:flex;flex-direction:column;gap:3px;min-width:0}.theme-choice-copy strong{font-size:14px}.theme-choice-copy small{font-size:11px;color:var(--muted)}
+.theme-choice-preview{width:72px;height:58px;flex:0 0 auto;border-radius:13px;padding:8px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:12px 1fr;gap:5px;overflow:hidden}
+.theme-choice-preview span{display:block;border-radius:5px}.theme-choice-preview span:first-child{grid-column:1/-1}
+.classic-preview{background:#eef2ff;border:1px solid #dbe4ff}.classic-preview span{background:#fff;border:1px solid #dfe5ef}.classic-preview span:first-child{background:#4f46e5;border:0}
+.glass-preview{background:linear-gradient(135deg,#dbeafe,#f5d0fe);border:1px solid rgba(255,255,255,.65)}.glass-preview span{background:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.75);backdrop-filter:blur(5px)}.glass-preview span:first-child{background:linear-gradient(135deg,#4f46e5,#a855f7);border:0}
+.settings-glass-note{display:flex;align-items:flex-start;gap:11px;padding:13px 14px;border:1px solid var(--line);background:var(--primary-soft);border-radius:15px}.settings-glass-note>i{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--card);color:var(--primary);font-size:17px;flex:0 0 auto}
+
+/* Glassmorphism is an app-wide visual mode. */
+html[data-visual-style="glass"] body{background:radial-gradient(circle at 8% 8%,rgba(99,102,241,.16),transparent 30%),radial-gradient(circle at 92% 12%,rgba(14,165,233,.14),transparent 28%),linear-gradient(135deg,#eef2ff 0%,#f8fafc 48%,#ecfeff 100%);background-attachment:fixed}
+html[data-visual-style="glass"] .app-header{background:rgba(255,255,255,.58);border-bottom-color:rgba(255,255,255,.72);box-shadow:0 10px 30px rgba(30,41,59,.07)}
+html[data-visual-style="glass"] .bottom-nav{background:rgba(255,255,255,.58);border-top-color:rgba(255,255,255,.72);box-shadow:0 -10px 30px rgba(30,41,59,.06)}
+html[data-visual-style="glass"] .cardx,
+html[data-visual-style="glass"] .login-card{background:rgba(255,255,255,.56);border-color:rgba(255,255,255,.78);box-shadow:0 18px 45px rgba(51,65,85,.10),inset 0 1px 0 rgba(255,255,255,.8);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+html[data-visual-style="glass"] .form-control,
+html[data-visual-style="glass"] .form-select,
+html[data-visual-style="glass"] .input-group-text{background:rgba(255,255,255,.5);border-color:rgba(148,163,184,.35);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+html[data-visual-style="glass"] .hero,
+html[data-visual-style="glass"] .savings-hero-card{box-shadow:0 20px 45px rgba(37,99,235,.22),inset 0 1px 0 rgba(255,255,255,.2)}
+html[data-visual-style="glass"] .kpi,
+html[data-visual-style="glass"] .savings-reserve-box,
+html[data-visual-style="glass"] .settings-theme-note,
+html[data-visual-style="glass"] .settings-glass-note{background:rgba(255,255,255,.42);border-color:rgba(255,255,255,.65);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+html[data-visual-style="glass"] .app-drawer{background:rgba(255,255,255,.70);border-left:1px solid rgba(255,255,255,.78);box-shadow:-25px 0 60px rgba(15,23,42,.16);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+html[data-visual-style="glass"] .drawer-user,
+html[data-visual-style="glass"] .drawer-nav a{background:rgba(255,255,255,.48);border:1px solid rgba(255,255,255,.66);box-shadow:0 8px 22px rgba(51,65,85,.05);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+html[data-visual-style="glass"] .drawer-nav a.danger{background:rgba(255,241,242,.68);border-color:rgba(251,113,133,.18)}
+html[data-visual-style="glass"] .icon-btn{background:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.7);box-shadow:0 6px 18px rgba(51,65,85,.07);backdrop-filter:blur(10px)}
+html[data-visual-style="glass"] .bottom-nav a.active{background:rgba(255,255,255,.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,.65),0 7px 18px rgba(51,65,85,.07)}
+html[data-visual-style="glass"] .stat-card,
+html[data-visual-style="glass"] .savings-category-card,
+html[data-visual-style="glass"] .savings-action-card,
+html[data-visual-style="glass"] .history-total-card{background:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.7);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+html[data-visual-style="glass"] .theme-choice{background:rgba(255,255,255,.44);border-color:rgba(255,255,255,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+html[data-visual-style="glass"] .theme-choice.active{box-shadow:0 0 0 3px var(--primary-soft),0 12px 28px rgba(51,65,85,.08)}
+
+html[data-theme="dark"][data-visual-style="glass"] body{background:radial-gradient(circle at 10% 10%,rgba(79,70,229,.24),transparent 32%),radial-gradient(circle at 90% 12%,rgba(14,165,233,.18),transparent 30%),linear-gradient(135deg,#0b1220,#111827 50%,#0b1b2a);background-attachment:fixed}
+html[data-theme="dark"][data-visual-style="glass"] .app-header{background:rgba(15,23,42,.60);border-bottom-color:rgba(148,163,184,.18)}
+html[data-theme="dark"][data-visual-style="glass"] .bottom-nav{background:rgba(15,23,42,.62);border-top-color:rgba(148,163,184,.18)}
+html[data-theme="dark"][data-visual-style="glass"] .cardx,
+html[data-theme="dark"][data-visual-style="glass"] .login-card{background:rgba(17,24,39,.56);border-color:rgba(148,163,184,.18);box-shadow:0 18px 50px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.05)}
+html[data-theme="dark"][data-visual-style="glass"] .form-control,
+html[data-theme="dark"][data-visual-style="glass"] .form-select,
+html[data-theme="dark"][data-visual-style="glass"] .input-group-text{background:rgba(15,23,42,.50);border-color:rgba(148,163,184,.24)}
+html[data-theme="dark"][data-visual-style="glass"] .app-drawer{background:rgba(15,23,42,.72);border-left-color:rgba(148,163,184,.18);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+html[data-theme="dark"][data-visual-style="glass"] .drawer-user,
+html[data-theme="dark"][data-visual-style="glass"] .drawer-nav a{background:rgba(30,41,59,.48);border-color:rgba(148,163,184,.16)}
+html[data-theme="dark"][data-visual-style="glass"] .drawer-nav a.danger{background:rgba(127,29,29,.30);border-color:rgba(248,113,113,.15)}
+html[data-theme="dark"][data-visual-style="glass"] .icon-btn{background:rgba(30,41,59,.52);border-color:rgba(148,163,184,.18)}
+html[data-theme="dark"][data-visual-style="glass"] .kpi,
+html[data-theme="dark"][data-visual-style="glass"] .savings-reserve-box,
+html[data-theme="dark"][data-visual-style="glass"] .settings-theme-note,
+html[data-theme="dark"][data-visual-style="glass"] .settings-glass-note{background:rgba(30,41,59,.40);border-color:rgba(148,163,184,.16)}
+html[data-theme="dark"][data-visual-style="glass"] .theme-choice{background:rgba(30,41,59,.42);border-color:rgba(148,163,184,.18)}
+
+@media(max-width:575.98px){.theme-choice-grid{grid-template-columns:1fr}.theme-choice{min-height:84px}.theme-choice-preview{width:64px;height:54px}}
+
+/* ===== v24 Glassmorphism hardening =====
+   The glass theme intentionally covers every major application surface,
+   including components created dynamically by the JavaScript renderer. */
+html[data-visual-style="glass"]{
+  --glass-bg:rgba(255,255,255,.56);
+  --glass-bg-strong:rgba(255,255,255,.70);
+  --glass-bg-soft:rgba(255,255,255,.42);
+  --glass-border:rgba(255,255,255,.76);
+  --glass-shadow:0 18px 45px rgba(30,41,59,.10), inset 0 1px 0 rgba(255,255,255,.78);
+  --glass-shadow-soft:0 10px 28px rgba(30,41,59,.07), inset 0 1px 0 rgba(255,255,255,.62);
+}
+html[data-theme="dark"][data-visual-style="glass"]{
+  --glass-bg:rgba(17,24,39,.58);
+  --glass-bg-strong:rgba(15,23,42,.72);
+  --glass-bg-soft:rgba(30,41,59,.42);
+  --glass-border:rgba(148,163,184,.20);
+  --glass-shadow:0 18px 50px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.05);
+  --glass-shadow-soft:0 12px 30px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.04);
+}
+html[data-visual-style="glass"] body{
+  background:
+    radial-gradient(circle at 8% 8%,rgba(99,102,241,.20),transparent 28%),
+    radial-gradient(circle at 92% 12%,rgba(14,165,233,.16),transparent 26%),
+    radial-gradient(circle at 50% 100%,rgba(168,85,247,.12),transparent 30%),
+    linear-gradient(135deg,#eef2ff 0%,#f8fafc 48%,#ecfeff 100%);
+  background-attachment:fixed;
+}
+html[data-theme="dark"][data-visual-style="glass"] body{
+  background:
+    radial-gradient(circle at 10% 8%,rgba(79,70,229,.28),transparent 30%),
+    radial-gradient(circle at 90% 12%,rgba(14,165,233,.20),transparent 28%),
+    radial-gradient(circle at 50% 100%,rgba(168,85,247,.14),transparent 32%),
+    linear-gradient(135deg,#080f1d 0%,#111827 52%,#0b1b2a 100%);
+}
+html[data-visual-style="glass"] .app-header,
+html[data-visual-style="glass"] .bottom-nav,
+html[data-visual-style="glass"] .app-drawer,
+html[data-visual-style="glass"] .cardx,
+html[data-visual-style="glass"] .login-card,
+html[data-visual-style="glass"] .filter-bar,
+html[data-visual-style="glass"] .admin-card,
+html[data-visual-style="glass"] .backup-health-card,
+html[data-visual-style="glass"] .mini-balance,
+html[data-visual-style="glass"] .history-total-card,
+html[data-visual-style="glass"] .settings-card,
+html[data-visual-style="glass"] .settings-theme-note,
+html[data-visual-style="glass"] .settings-glass-note,
+html[data-visual-style="glass"] .kpi,
+html[data-visual-style="glass"] .savings-reserve-box,
+html[data-visual-style="glass"] .health-stat,
+html[data-visual-style="glass"] .page-btn,
+html[data-visual-style="glass"] .toast,
+html[data-visual-style="glass"] .modal-content,
+html[data-visual-style="glass"] .dropdown-menu{
+  background:var(--glass-bg);
+  border-color:var(--glass-border);
+  box-shadow:var(--glass-shadow);
+  -webkit-backdrop-filter:blur(20px) saturate(150%);
+  backdrop-filter:blur(20px) saturate(150%);
+}
+html[data-visual-style="glass"] .app-header{
+  background:rgba(255,255,255,.62);
+  border-bottom-color:var(--glass-border);
+  box-shadow:0 10px 32px rgba(30,41,59,.08);
+}
+html[data-theme="dark"][data-visual-style="glass"] .app-header{background:rgba(15,23,42,.64)}
+html[data-visual-style="glass"] .bottom-nav{
+  background:rgba(255,255,255,.62);
+  border-top-color:var(--glass-border);
+  box-shadow:0 -10px 32px rgba(30,41,59,.08);
+}
+html[data-theme="dark"][data-visual-style="glass"] .bottom-nav{background:rgba(15,23,42,.66)}
+html[data-visual-style="glass"] .app-drawer{
+  background:var(--glass-bg-strong);
+  border-left:1px solid var(--glass-border);
+  box-shadow:-25px 0 60px rgba(15,23,42,.16);
+}
+html[data-visual-style="glass"] .drawer-user,
+html[data-visual-style="glass"] .drawer-nav a,
+html[data-visual-style="glass"] .drawer-nav button,
+html[data-visual-style="glass"] .icon-btn,
+html[data-visual-style="glass"] .theme-toggle,
+html[data-visual-style="glass"] .theme-choice,
+html[data-visual-style="glass"] .chart-switcher,
+html[data-visual-style="glass"] .chart-range,
+html[data-visual-style="glass"] .auth-tabs,
+html[data-visual-style="glass"] .ai-quick button{
+  background:var(--glass-bg-soft);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-shadow-soft);
+  -webkit-backdrop-filter:blur(14px) saturate(145%);
+  backdrop-filter:blur(14px) saturate(145%);
+}
+html[data-visual-style="glass"] .drawer-nav a:hover,
+html[data-visual-style="glass"] .drawer-nav button:hover,
+html[data-visual-style="glass"] .theme-choice:hover,
+html[data-visual-style="glass"] .icon-btn:hover,
+html[data-visual-style="glass"] .theme-toggle:hover,
+html[data-visual-style="glass"] .page-btn:hover:not(:disabled){
+  transform:translateY(-1px);
+  border-color:color-mix(in srgb,var(--primary) 28%,var(--glass-border));
+}
+html[data-visual-style="glass"] .drawer-nav a.danger,
+html[data-visual-style="glass"] .drawer-nav button.danger{
+  background:rgba(255,241,242,.58);
+  border-color:rgba(251,113,133,.24);
+}
+html[data-theme="dark"][data-visual-style="glass"] .drawer-nav a.danger,
+html[data-theme="dark"][data-visual-style="glass"] .drawer-nav button.danger{background:rgba(127,29,29,.28)}
+html[data-visual-style="glass"] .form-control,
+html[data-visual-style="glass"] .form-select,
+html[data-visual-style="glass"] .input-group-text,
+html[data-visual-style="glass"] .ai-compose input{
+  background:rgba(255,255,255,.46);
+  color:var(--ink);
+  border-color:rgba(148,163,184,.30);
+  -webkit-backdrop-filter:blur(12px) saturate(140%);
+  backdrop-filter:blur(12px) saturate(140%);
+}
+html[data-theme="dark"][data-visual-style="glass"] .form-control,
+html[data-theme="dark"][data-visual-style="glass"] .form-select,
+html[data-theme="dark"][data-visual-style="glass"] .input-group-text,
+html[data-theme="dark"][data-visual-style="glass"] .ai-compose input{
+  background:rgba(15,23,42,.50);
+  color:#e5e7eb;
+  border-color:rgba(148,163,184,.24);
+}
+html[data-visual-style="glass"] .form-control:focus,
+html[data-visual-style="glass"] .form-select:focus,
+html[data-visual-style="glass"] .ai-compose input:focus{
+  background:rgba(255,255,255,.58);
+  border-color:var(--primary);
+}
+html[data-theme="dark"][data-visual-style="glass"] .form-control:focus,
+html[data-theme="dark"][data-visual-style="glass"] .form-select:focus,
+html[data-theme="dark"][data-visual-style="glass"] .ai-compose input:focus{background:rgba(15,23,42,.68)}
+html[data-visual-style="glass"] .hero,
+html[data-visual-style="glass"] .savings-hero-card{
+  border:1px solid rgba(255,255,255,.24);
+  box-shadow:0 20px 50px rgba(37,99,235,.22),inset 0 1px 0 rgba(255,255,255,.20);
+}
+html[data-visual-style="glass"] .stat-card,
+html[data-visual-style="glass"] .savings-category-card,
+html[data-visual-style="glass"] .savings-action-card,
+html[data-visual-style="glass"] .health-stat{
+  background:var(--glass-bg-soft);
+}
+html[data-visual-style="glass"] .balance-row,
+html[data-visual-style="glass"] .tx-item{border-color:rgba(148,163,184,.18)!important}
+html[data-visual-style="glass"] .empty{background:transparent}
+html[data-visual-style="glass"] .page-btn.active,
+html[data-visual-style="glass"] .chart-range.active,
+html[data-visual-style="glass"] .theme-choice.active{
+  background:var(--primary-soft);
+  color:var(--primary);
+  border-color:color-mix(in srgb,var(--primary) 35%,var(--glass-border));
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--primary) 13%,transparent),var(--glass-shadow-soft);
+}
+html[data-visual-style="glass"] .ai-chat,
+html[data-visual-style="glass"] .ai-quickbar,
+html[data-visual-style="glass"] .ai-compose{
+  background:var(--glass-bg-strong);
+  border-color:var(--glass-border);
+  -webkit-backdrop-filter:blur(22px) saturate(150%);
+  backdrop-filter:blur(22px) saturate(150%);
+}
+html[data-visual-style="glass"] .ai-body{background:rgba(248,250,252,.28)}
+html[data-theme="dark"][data-visual-style="glass"] .ai-body{background:rgba(15,23,42,.28)}
+html[data-visual-style="glass"] .ai-bubble{background:var(--glass-bg-soft);border-color:var(--glass-border)}
+html[data-theme="dark"][data-visual-style="glass"] .ai-bubble{color:#e5e7eb}
+html[data-visual-style="glass"] .ai-quick button{color:var(--ink)}
+html[data-theme="dark"][data-visual-style="glass"] .ai-quick button{color:#e5e7eb}
+html[data-visual-style="glass"] .login-page{background:transparent}
+html[data-theme="dark"][data-visual-style="glass"] .login-page{background:transparent}
+html[data-visual-style="glass"] .auth-tabs{background:var(--glass-bg-soft)}
+html[data-theme="dark"][data-visual-style="glass"] .auth-tabs button.active{background:rgba(30,41,59,.55);color:#c7d2fe}
+html[data-visual-style="glass"] .toast{color:var(--ink)}
+html[data-theme="dark"][data-visual-style="glass"] .toast{color:#e5e7eb}
+html[data-visual-style="glass"] .modal-backdrop{backdrop-filter:blur(4px)}
+html[data-theme="dark"][data-visual-style="glass"] .modal-content{color:#e5e7eb;background:rgba(15,23,42,.72)}
+html[data-theme="dark"][data-visual-style="glass"] .dropdown-menu{color:#e5e7eb;background:rgba(15,23,42,.76)}
+html[data-theme="dark"][data-visual-style="glass"] .dropdown-item{color:#e5e7eb}
+html[data-theme="dark"][data-visual-style="glass"] .dropdown-item:hover{background:rgba(148,163,184,.12)}
+
+/* Keep theme application deterministic when navigating between pages. */
+html[data-visual-style="glass"] .btn-light,
+html[data-visual-style="glass"] .btn-outline-secondary{
+  background:var(--glass-bg-soft);
+  color:var(--ink);
+  border-color:var(--glass-border);
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+}
+html[data-theme="dark"][data-visual-style="glass"] .btn-light,
+html[data-theme="dark"][data-visual-style="glass"] .btn-outline-secondary{color:#e5e7eb;background:rgba(30,41,59,.46)}
+
+/* ===== v24 production theme hardening ===== */
+:root{
+  --border:var(--line);
+  --text:var(--ink);
+  --surface:#f8fafc;
+  --surface-soft:#f8fafc;
+  --card-bg:var(--card);
+}
+
+/* Keep the glass language consistent on every page/component, including
+   Bootstrap/static components and the tutorial's inline UI. */
+html[data-visual-style="glass"] .login-page{
+  background:
+    radial-gradient(circle at 10% 10%,rgba(99,102,241,.18),transparent 30%),
+    radial-gradient(circle at 90% 15%,rgba(14,165,233,.15),transparent 28%),
+    linear-gradient(135deg,#eef2ff 0%,#f8fafc 50%,#ecfeff 100%);
+}
+html[data-theme="dark"][data-visual-style="glass"] .login-page{
+  background:
+    radial-gradient(circle at 10% 10%,rgba(79,70,229,.25),transparent 32%),
+    radial-gradient(circle at 90% 15%,rgba(14,165,233,.18),transparent 30%),
+    linear-gradient(135deg,#0b1220,#111827 52%,#0b1b2a);
+}
+html[data-visual-style="glass"] .filter-bar,
+html[data-visual-style="glass"] .history-total-card,
+html[data-visual-style="glass"] .health-stat,
+html[data-visual-style="glass"] .page-btn,
+html[data-visual-style="glass"] .chart-switcher,
+html[data-visual-style="glass"] .auth-tabs,
+html[data-visual-style="glass"] .topic-card,
+html[data-visual-style="glass"] .faq-item,
+html[data-visual-style="glass"] .tour-menu button,
+html[data-visual-style="glass"] .tour-content,
+html[data-visual-style="glass"] .mock-window,
+html[data-visual-style="glass"] .mock-kpi,
+html[data-visual-style="glass"] .mock-row,
+html[data-visual-style="glass"] .ai-bubble,
+html[data-visual-style="glass"] .ai-quickbar,
+html[data-visual-style="glass"] .ai-compose{
+  background:var(--glass-bg-soft);
+  border-color:var(--glass-border);
+  box-shadow:var(--glass-shadow-soft);
+  -webkit-backdrop-filter:blur(14px) saturate(145%);
+  backdrop-filter:blur(14px) saturate(145%);
+}
+html[data-theme="dark"][data-visual-style="glass"] .filter-bar,
+html[data-theme="dark"][data-visual-style="glass"] .history-total-card,
+html[data-theme="dark"][data-visual-style="glass"] .health-stat,
+html[data-theme="dark"][data-visual-style="glass"] .page-btn,
+html[data-theme="dark"][data-visual-style="glass"] .chart-switcher,
+html[data-theme="dark"][data-visual-style="glass"] .auth-tabs,
+html[data-theme="dark"][data-visual-style="glass"] .topic-card,
+html[data-theme="dark"][data-visual-style="glass"] .faq-item,
+html[data-theme="dark"][data-visual-style="glass"] .tour-menu button,
+html[data-theme="dark"][data-visual-style="glass"] .tour-content,
+html[data-theme="dark"][data-visual-style="glass"] .mock-window,
+html[data-theme="dark"][data-visual-style="glass"] .mock-kpi,
+html[data-theme="dark"][data-visual-style="glass"] .mock-row{
+  color:#e5e7eb;
+}
+html[data-visual-style="glass"] .auth-tabs button.active,
+html[data-visual-style="glass"] .chart-range.active,
+html[data-visual-style="glass"] .page-btn.active,
+html[data-visual-style="glass"] .tour-menu button.active{
+  background:var(--primary-soft);
+  color:var(--primary);
+  border-color:color-mix(in srgb,var(--primary) 35%,var(--glass-border));
+}
+html[data-theme="dark"][data-visual-style="glass"] .auth-tabs button.active,
+html[data-theme="dark"][data-visual-style="glass"] .chart-range.active,
+html[data-theme="dark"][data-visual-style="glass"] .page-btn.active,
+html[data-theme="dark"][data-visual-style="glass"] .tour-menu button.active{
+  background:rgba(99,102,241,.18);
+  color:#c7d2fe;
+}
+html[data-visual-style="glass"] .btn-light,
+html[data-visual-style="glass"] .btn-outline-secondary,
+html[data-visual-style="glass"] .btn-outline-danger{
+  background:var(--glass-bg-soft);
+  border-color:var(--glass-border);
+  -webkit-backdrop-filter:blur(12px);
+  backdrop-filter:blur(12px);
+}
+html[data-theme="dark"][data-visual-style="glass"] .btn-light,
+html[data-theme="dark"][data-visual-style="glass"] .btn-outline-secondary{
+  color:#e5e7eb;
+  background:rgba(30,41,59,.46);
+  border-color:rgba(148,163,184,.22);
+}
+html[data-theme="dark"][data-visual-style="glass"] .btn-outline-danger{
+  color:#fda4af;
+  background:rgba(127,29,29,.26);
+  border-color:rgba(248,113,113,.22);
+}
+html[data-visual-style="glass"] .drawer-nav a:hover,
+html[data-visual-style="glass"] .drawer-nav button:hover,
+html[data-visual-style="glass"] .theme-choice:hover,
+html[data-visual-style="glass"] .topic-card:hover,
+html[data-visual-style="glass"] .faq-q:hover{
+  border-color:color-mix(in srgb,var(--primary) 28%,var(--glass-border));
+}
+html[data-theme="dark"][data-visual-style="glass"] .tour-menu button,
+html[data-theme="dark"][data-visual-style="glass"] .tour-menu button .tour-dot,
+html[data-theme="dark"][data-visual-style="glass"] .mock-window,
+html[data-theme="dark"][data-visual-style="glass"] .mock-kpi,
+html[data-theme="dark"][data-visual-style="glass"] .mock-row{
+  background:rgba(30,41,59,.42);
+  border-color:rgba(148,163,184,.18);
+}
+html[data-theme="dark"][data-visual-style="glass"] .tour-hero,
+html[data-theme="dark"][data-visual-style="glass"] .tutorial-hero{
+  background:rgba(30,41,59,.38);
+  border-color:rgba(148,163,184,.18);
+}
+html[data-visual-style="glass"] .tutorial-hero,
+html[data-visual-style="glass"] .tour-content{
+  border-color:var(--glass-border);
+}
+html[data-theme="dark"] .tutorial-hero,
+html[data-theme="dark"] .tour-content{
+  color:#e5e7eb;
+}
+
+/* The app header and drawer remain readable when the theme is changed. */
+html[data-visual-style="glass"] .app-header,
+html[data-visual-style="glass"] .bottom-nav,
+html[data-visual-style="glass"] .app-drawer{
+  -webkit-backdrop-filter:blur(24px) saturate(150%);
+  backdrop-filter:blur(24px) saturate(150%);
+}
+html[data-theme="dark"][data-visual-style="glass"] .drawer-brand strong,
+html[data-theme="dark"][data-visual-style="glass"] .drawer-user strong,
+html[data-theme="dark"][data-visual-style="glass"] .drawer-nav a,
+html[data-theme="dark"][data-visual-style="glass"] .drawer-nav button,
+html[data-theme="dark"][data-visual-style="glass"] .brand{
+  color:#f8fafc;
+}
+
+/* Avoid text disappearing in translucent surfaces. */
+html[data-theme="dark"][data-visual-style="glass"] .settings-glass-note,
+html[data-theme="dark"][data-visual-style="glass"] .settings-theme-note,
+html[data-theme="dark"][data-visual-style="glass"] .health-stat,
+html[data-theme="dark"][data-visual-style="glass"] .history-total-card,
+html[data-theme="dark"][data-visual-style="glass"] .filter-bar{
+  color:#e5e7eb;
+}

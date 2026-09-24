@@ -39,10 +39,11 @@
   <div class="drawer-top"><div class="drawer-brand"><img src="assets/icon.svg" alt=""><div><strong>TraHis</strong><small>Personal finance</small></div></div><button id="closeDrawer" class="icon-btn"><i class="bi bi-x-lg"></i></button></div>
   <div class="drawer-user" id="drawerUser"></div>
   <nav class="drawer-nav">
-    <a href="savings.html"><i class="bi bi-piggy-bank"></i><span>Savings</span></a>
-    <a href="tutorial.html" class="active"><i class="bi bi-play-circle"></i><span>App Tutorial</span></a>
     <a href="profile.html"><i class="bi bi-person"></i><span>Profile</span></a>
-    <a href="backup.html"><i class="bi bi-cloud-arrow-down"></i><span>Backup & Restore</span></a>
+    <a href="savings.html"><i class="bi bi-piggy-bank"></i><span>Savings</span></a>
+    <a href="tutorial.html"><i class="bi bi-play-circle"></i><span>App Tutorial</span></a>
+    <a href="settings.html"><i class="bi bi-gear-fill"></i><span>Settings</span></a>
+    <a href="backup.html"><i class="bi bi-cloud-arrow-down"></i><span>Backup &amp; Restore</span></a>
     <a id="adminNav" href="admin.html"><i class="bi bi-shield-check"></i><span>Admin</span></a>
     <button id="logoutBtn" class="danger"><i class="bi bi-box-arrow-right"></i><span>Logout</span></button>
   </nav>
@@ -79,7 +80,7 @@
   ['Transfer','bi-arrow-left-right','Move money between Cash and Bank. Transfers change account balances but are not income or expense.'],
   ['Savings','bi-piggy-bank','Keep money protected from normal spending, set a monthly budget and manage savings categories.'],
   ['History','bi-clock-history','Search and filter transactions, review dates and amounts, and manage eligible records.'],
-  ['Profile & Themes','bi-palette','Change your profile preferences, Light/Dark mode, theme color and compact/comfortable density.'],
+  ['Settings & Themes','bi-gear-fill','Use Settings for Classic or Glassmorphism, Light/Dark mode, theme color and compact/comfortable density.'],
   ['Backup & Restore','bi-cloud-arrow-down','Export your local TraHis data as JSON and restore it later on the same device.'],
   ['Admin','bi-shield-check','Master Admin can approve registrations and manage user access.']
  ];
@@ -92,7 +93,7 @@
  `<div class="mock-row highlight"><span><i class="bi bi-wallet2 me-2"></i>From</span><b>Cash</b></div><div class="mock-row mt-2"><span>To</span><b>Bank</b></div><div class="mock-row mt-2"><span>Amount</span><b>₹5,000</b></div>`,
  `<div class="mock-kpis"><div class="mock-kpi highlight"><small>Main Savings</small><div class="fw-bold">₹10,000</div></div><div class="mock-kpi"><small>Emergency</small><div class="fw-bold">₹5,000</div></div><div class="mock-kpi"><small>Budget</small><div class="fw-bold">₹15,000</div></div></div><div class="mock-line w70"></div>`,
  `<div class="mock-row"><span>Search & filters</span><b>⌕</b></div><div class="mock-list"><div class="mock-row highlight"><span>Expense • Cash</span><b>₹900</b></div><div class="mock-row"><span>Income • Bank</span><b>₹10,000</b></div><div class="mock-row"><span>Transfer • Cash → Bank</span><b>₹2,000</b></div></div>`,
- `<div class="mock-row highlight"><span>Appearance</span><b>Dark</b></div><div class="mock-row mt-2"><span>Theme Color</span><b>Indigo</b></div><div class="mock-row mt-2"><span>UI Density</span><b>Comfortable</b></div>`,
+ `<div class="mock-row highlight"><span>App Theme</span><b>Glassmorphism</b></div><div class="mock-row mt-2"><span>Theme Color</span><b>Indigo</b></div><div class="mock-row mt-2"><span>UI Density</span><b>Comfortable</b></div>`,
  `<div class="mock-list"><div class="mock-row highlight"><span><i class="bi bi-download me-2"></i>Export Backup</span><b>JSON</b></div><div class="mock-row mt-2"><span><i class="bi bi-upload me-2"></i>Restore Backup</span><b>Choose File</b></div></div>`,
  `<div class="mock-list"><div class="mock-row highlight"><span>Pending User</span><b>Approve</b></div><div class="mock-row mt-2"><span>Approved User</span><b>Access</b></div></div>`][i];
  return `<article class="tour-panel ${i===0?'active':''}" data-panel="${i}"><div class="small text-uppercase fw-bold theme-accent-text">Step ${i+1}</div><div class="tour-copy"><h3>${s[0]}</h3><p>${s[2]}</p></div><div class="mock-window"><div class="mock-top"><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span><span class="small text-muted ms-2">TraHis • ${s[0]}</span></div><div class="mock-body">${mocks}</div></div></article>`};
