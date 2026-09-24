@@ -1,10 +1,10 @@
 /* TraHis - offline local PWA
-   v38: tutorial module + monthly overview polish + future-date protection + exact-date AI lookup + responsive custom controls + shared components
+   v40: Financial Health Dashboard + monthly health analytics
 */
 (function(){
 "use strict";
 
-const APP_VERSION = "v38";
+const APP_VERSION = "v40";
 const MASTER = { username:"tra_his", password:"tra_his@2503", name:"Master Admin" };
 const DB_KEY = "trahis_state_v5";
 const LEGACY_DB_KEY = "trahis_state_v4";
@@ -23,7 +23,7 @@ const THEME_COLORS = {
   orange:{label:"Orange",primary:"#ea580c",primary2:"#f59e0b",soft:"#fff7ed"}
 };
 let state = loadState();
-const ROUTES = {dashboard:"index.html",add:"add.html",transfer:"transfer.html",history:"history.html",calendar:"calendar.html",profile:"profile.html",savings:"savings.html",tutorial:"tutorial.html",settings:"settings.html",backup:"backup.html",admin:"admin.html"};
+const ROUTES = {dashboard:"index.html",add:"add.html",transfer:"transfer.html",history:"history.html",calendar:"calendar.html",health:"health.html",profile:"profile.html",savings:"savings.html",tutorial:"tutorial.html",settings:"settings.html",backup:"backup.html",admin:"admin.html"};
 function routeFromLocation(){
   const file=(location.pathname.split("/").pop()||"index.html").toLowerCase();
   const found=Object.keys(ROUTES).find(k=>ROUTES[k].toLowerCase()===file);
@@ -602,6 +602,76 @@ function bindInternalNavigation(){
     go(route,(url.search||"")+(url.hash||""));
   });
 }
+function monthKeyToParts(key){const [y,m]=String(key).split("-").map(Number);return {year:y,month:m-1};}
+function monthLabelFromKey(key){const p=monthKeyToParts(key);if(!p.year||p.month<0)return "Unknown month";return new Date(p.year,p.month,1).toLocaleDateString("en-IN",{month:"long",year:"numeric"});}
+function availableHealthMonths(){
+  const keys=new Set([localMonthKey(new Date())]);
+  txs().forEach(t=>keys.add(localMonthKey(t.date)));
+  return [...keys].filter(Boolean).sort().reverse();
+}
+function healthMonthData(monthKey){
+  const {year,month}=monthKeyToParts(monthKey);
+  const current=monthSummary(year,month);
+  const prevDate=new Date(year,month-1,1);
+  const prev=monthSummary(prevDate.getFullYear(),prevDate.getMonth());
+  const income=current.income, expense=current.expense, net=income-expense;
+  const savingsRate=income>0?Math.max(0,(net/income)*100):0;
+  const budget=Number(profile()?.savings?.monthlyBudget||0);
+  const budgetUsage=budget>0?(expense/budget)*100:null;
+  const balance=current.closing.cash+current.closing.bank;
+  const prevExpense=prev.expense;
+  const expenseChange=prevExpense>0?((expense-prevExpense)/prevExpense)*100:null;
+  const payment={cash:0,bank:0,upi:0};
+  current.transactions.filter(t=>t.kind==="expense").forEach(t=>{
+    const a=Number(t.amount)||0;
+    if(t.method==="cash")payment.cash+=a;
+    else if(t.method==="upi")payment.upi+=a;
+    else payment.bank+=a;
+  });
+  const daily=new Map();
+  current.transactions.filter(t=>t.kind==="expense").forEach(t=>{
+    const k=localDateKey(t.date);daily.set(k,(daily.get(k)||0)+Number(t.amount||0));
+  });
+  let topDayKey="",topDayAmount=0;
+  daily.forEach((amount,key)=>{if(amount>topDayAmount){topDayAmount=amount;topDayKey=key;}});
+  const largestExpense=current.transactions.filter(t=>t.kind==="expense").sort((a,b)=>Number(b.amount)-Number(a.amount))[0]||null;
+  let score=0;
+  if(net>0)score+=25;
+  else if(net===0&&income>0)score+=12;
+  if(savingsRate>=20)score+=25; else if(savingsRate>=10)score+=20; else if(savingsRate>0)score+=12;
+  if(budgetUsage===null)score+=15; else if(budgetUsage<=70)score+=25; else if(budgetUsage<=90)score+=20; else if(budgetUsage<=100)score+=12;
+  if(expenseChange===null)score+=25; else if(expenseChange<=0)score+=25; else if(expenseChange<=15)score+=12;
+  score=Math.max(0,Math.min(100,Math.round(score)));
+  const scoreLabel=score>=80?"Strong":score>=60?"Balanced":score>=40?"Watchful":"Needs attention";
+  return {monthKey,current,prev,income,expense,net,savingsRate,budget,budgetUsage,balance,expenseChange,payment,topDayKey,topDayAmount,largestExpense,score,scoreLabel};
+}
+function healthScoreTone(score){return score>=80?"good":score>=60?"steady":score>=40?"watch":"needs";}
+function healthProgress(value,max=100){return Math.max(0,Math.min(max,Number(value)||0));}
+function renderFinancialHealth(monthKey){
+  const months=availableHealthMonths();
+  const selected=months.includes(monthKey)?monthKey:(months[0]||localMonthKey(new Date()));
+  const d=healthMonthData(selected),tone=healthScoreTone(d.score);
+  const monthOptions=months.map(k=>`<option value="${esc(k)}" ${k===selected?"selected":""}>${esc(monthLabelFromKey(k))}</option>`).join("");
+  const netLabel=d.net>=0?"Positive cash flow":"Negative cash flow";
+  const budgetText=d.budget>0?`${Math.round(d.budgetUsage)}% used of ${money(d.budget)}`:"No monthly budget set";
+  const expenseTrend=d.expenseChange===null?"No previous-month baseline":`${d.expenseChange>0?"Up":"Down"} ${Math.abs(d.expenseChange).toFixed(1)}% vs previous month`;
+  const topDay=d.topDayKey?`${formatDayTitle(d.topDayKey)} • ${money(d.topDayAmount)}`:"No expense recorded";
+  const largest=d.largestExpense?`${esc(d.largestExpense.note||"Expense")} • ${money(d.largestExpense.amount)}`:"No expense recorded";
+  const paymentTotal=d.payment.cash+d.payment.bank+d.payment.upi;
+  const cashPct=paymentTotal?d.payment.cash/paymentTotal*100:0,bankPct=paymentTotal?d.payment.bank/paymentTotal*100:0,upiPct=paymentTotal?d.payment.upi/paymentTotal*100:0;
+  const scoreReasons=[
+    d.net>0?"Income covered monthly expenses.":"Monthly expenses are at or above income.",
+    d.income?"Savings rate is "+d.savingsRate.toFixed(1)+"%.":"No income recorded for this month.",
+    d.budget===0?"No monthly expense budget is configured.":d.budgetUsage<=100?"Budget usage is "+d.budgetUsage.toFixed(0)+"%.":"Budget usage is "+d.budgetUsage.toFixed(0)+"% — above the budget.",
+    savingsTotal()>0?"Current protected savings: "+money(savingsTotal())+".":"No protected savings are currently set.",
+    d.expenseChange===null?"No previous-month expense baseline.":d.expenseChange<=0?"Expenses are not higher than the previous month.":"Expenses are higher than the previous month."
+  ];
+  $("#main").html(`<div class="page-head mb-3"><div><h1 class="page-title">Financial Health</h1><div class="page-subtitle">A clear monthly view of cash flow, spending, savings and balance.</div></div><div class="health-head-control"><label for="healthMonth" class="visually-hidden">Health month</label><select id="healthMonth" class="form-select">${monthOptions}</select></div></div><div class="cardx health-score-card mb-3"><div class="health-score-main"><div class="health-score-ring ${tone}" style="--health-score:${d.score}"><div><strong>${d.score}</strong><span>/100</span></div></div><div class="health-score-copy"><div class="health-eyebrow"><i class="bi bi-activity"></i> Financial health indicator</div><h2>${d.scoreLabel}</h2><p>Based on this month's cash flow, savings rate, budget usage, protected savings and expense trend.</p></div></div><div class="health-reasons">${scoreReasons.map((r,i)=>`<div><i class="bi ${i===0&&d.net>0||i===1&&d.savingsRate>=10||i===2&&(d.budget===0||d.budgetUsage<=100)||i===4&&(d.expenseChange===null||d.expenseChange<=0)?"bi-check-circle-fill":"bi-info-circle"}"></i><span>${r}</span></div>`).join("")}</div></div><div class="row g-3 mb-3"><div class="col-6 col-xl-3"><div class="cardx health-kpi"><span>Month income</span><strong class="income-text">${money(d.income)}</strong><small>${d.current.transactions.filter(t=>t.kind==="income").length} income record${d.current.transactions.filter(t=>t.kind==="income").length===1?"":"s"}</small></div></div><div class="col-6 col-xl-3"><div class="cardx health-kpi"><span>Month expense</span><strong class="expense-text">${money(d.expense)}</strong><small>${d.current.transactions.filter(t=>t.kind==="expense").length} expense record${d.current.transactions.filter(t=>t.kind==="expense").length===1?"":"s"}</small></div></div><div class="col-6 col-xl-3"><div class="cardx health-kpi"><span>Net cash flow</span><strong class="${d.net>=0?"income-text":"expense-text"}">${d.net>=0?"+":"-"}${money(Math.abs(d.net))}</strong><small>${netLabel}</small></div></div><div class="col-6 col-xl-3"><div class="cardx health-kpi"><span>Closing balance</span><strong>${money(d.balance)}</strong><small>Cash ${money(d.current.closing.cash)} • Bank ${money(d.current.closing.bank)}</small></div></div></div><div class="row g-3"><div class="col-12 col-xl-7"><div class="cardx health-panel h-100"><div class="health-panel-head"><div><h5>Spending &amp; savings</h5><p>Key ratios for ${esc(monthLabelFromKey(selected))}.</p></div></div><div class="health-metric"><div><span>Savings rate</span><strong>${d.income?d.savingsRate.toFixed(1)+"%":"—"}</strong></div><div class="health-bar"><i style="width:${healthProgress(d.savingsRate)}%"></i></div></div><div class="health-metric"><div><span>Budget usage</span><strong>${d.budget>0?d.budgetUsage.toFixed(0)+"%":"—"}</strong></div><div class="health-bar"><i style="width:${healthProgress(d.budget>0?d.budgetUsage:0)}%"></i></div><small>${esc(budgetText)}</small></div><div class="health-detail-grid"><div><span>Current protected savings</span><strong>${money(savingsTotal())}</strong></div><div><span>Expense trend</span><strong>${esc(expenseTrend)}</strong></div><div><span>Highest expense day</span><strong>${esc(topDay)}</strong></div><div><span>Largest expense</span><strong>${largest}</strong></div></div></div></div><div class="col-12 col-xl-5"><div class="cardx health-panel h-100"><div class="health-panel-head"><div><h5>Expense by payment method</h5><p>How this month's expenses were paid.</p></div></div><div class="health-payment"><div class="health-payment-row"><span><i class="bi bi-cash-stack"></i> Cash</span><strong>${money(d.payment.cash)}</strong><em>${cashPct.toFixed(0)}%</em></div><div class="health-payment-row"><span><i class="bi bi-bank"></i> Bank</span><strong>${money(d.payment.bank)}</strong><em>${bankPct.toFixed(0)}%</em></div><div class="health-payment-row"><span><i class="bi bi-phone"></i> UPI</span><strong>${money(d.payment.upi)}</strong><em>${upiPct.toFixed(0)}%</em></div></div><div class="health-total-line"><span>Total expenses</span><strong>${money(d.expense)}</strong></div></div></div></div><div class="cardx health-compare mt-3"><div><div class="health-eyebrow"><i class="bi bi-arrow-left-right"></i> Month comparison</div><h5>${esc(monthLabelFromKey(selected))} vs ${esc(monthLabelFromKey(prevMonthKey(selected)))}</h5></div><div class="health-compare-grid"><div><span>Income</span><strong>${money(d.income)}</strong><small>Previous ${money(d.prev.income)}</small></div><div><span>Expense</span><strong>${money(d.expense)}</strong><small>Previous ${money(d.prev.expense)}</small></div><div><span>Closing balance</span><strong>${money(d.balance)}</strong><small>Opening ${money(d.current.opening.cash+d.current.opening.bank)}</small></div><a class="btn-soft" href="calendar.html">Open calendar <i class="bi bi-arrow-right"></i></a></div></div>`);
+  $("#healthMonth").on("change",function(){renderFinancialHealth($(this).val());});
+}
+function prevMonthKey(key){const {year,month}=monthKeyToParts(key);const d=new Date(year,month-1,1);return localMonthKey(d);}
+function renderHealth(){renderFinancialHealth(localMonthKey(new Date()));}
+
 function renderDashboard(){
   const p=profile(),list=txs();
   const totalInc=list.filter(t=>t.kind==="income").reduce((a,t)=>a+t.amount,0),totalExp=list.filter(t=>t.kind==="expense").reduce((a,t)=>a+t.amount,0);
@@ -609,7 +679,7 @@ function renderDashboard(){
   const s=p.savings,budget=Number(s.monthlyBudget||0),remaining=budget?Math.max(0,budget-monthExp):0,st=savingsTotal(),avail=availableBalance(),total=totalBalance();
   const recent=list.slice(0,3);
   const chartTitle=chartRange==="daily"?"Daily income & expense activity":chartRange==="monthly"?"Monthly income & expense activity":"Weekly income & expense activity";
-  $("#main").html(`<div class="page-head"><div><h1 class="page-title">Dashboard</h1><div class="page-subtitle">Your money, clearly tracked.</div></div><a class="btn-soft" href="add.html"><i class="bi bi-plus-lg"></i> Add</a></div><div class="hero mb-3"><div class="small opacity-75">Available to spend</div><div class="hero-amount">${money(avail)}</div><div class="mt-2 small opacity-75">Total ${money(total)} <span class="dot-sep">•</span> Savings locked ${money(st)}</div></div><div class="row g-3"><div class="col-6"><div class="cardx stat-card"><div class="stat-icon stat-blue"><i class="bi bi-wallet2"></i></div><div class="stat-label">Total Income</div><div class="stat-value">${money(totalInc)}</div></div></div><div class="col-6"><div class="cardx stat-card"><div class="stat-icon stat-green"><i class="bi bi-graph-up-arrow"></i></div><div class="stat-label">Total Expense</div><div class="stat-value">${money(totalExp)}</div></div></div><div class="col-6"><div class="cardx stat-card"><div class="stat-icon stat-red"><i class="bi bi-receipt"></i></div><div class="stat-label">This Month</div><div class="stat-value">${money(monthExp)}</div></div></div><div class="col-6"><div class="cardx stat-card"><div class="stat-icon stat-yellow"><i class="bi bi-list-check"></i></div><div class="stat-label">Transactions</div><div class="stat-value">${list.length}</div></div></div></div><div class="section-title">Balances</div><div class="cardx overflow-hidden">${balanceRow("bi-cash-stack","Cash",p.cash,"stat-green","Cash in hand")}${balanceRow("bi-bank","Bank",p.bank,"stat-blue","Bank account")}${balanceRow("bi-phone","UPI",p.bank,"stat-purple","Linked to Bank")}</div><div class="section-title d-flex justify-content-between align-items-center"><span>Recent transactions</span><a class="small fw-bold text-decoration-none" href="history.html">View all</a></div><div class="cardx overflow-hidden">${recent.map(txHtml).join("")||`<div class="empty"><i class="bi bi-inbox fs-2 d-block mb-2"></i>No transactions yet.</div>`}</div><div class="section-title chart-section-title"><span>Income &amp; Expense activity</span><div class="chart-switcher" role="group" aria-label="Expense chart range"><button type="button" class="chart-range ${chartRange==="daily"?"active":""}" data-range="daily">Daily</button><button type="button" class="chart-range ${chartRange==="weekly"?"active":""}" data-range="weekly">Weekly</button><button type="button" class="chart-range ${chartRange==="monthly"?"active":""}" data-range="monthly">Monthly</button></div></div><div class="cardx chart-box"><div class="chart-caption"><strong id="chartTitle">${chartTitle}</strong><div class="chart-caption-right"><span id="chartYearInfo">Year: —</span><span id="chartHint"></span></div></div><div class="chart-scroll"><canvas id="miniChart" aria-label="Expense activity chart"></canvas></div></div>`);
+  $("#main").html(`<div class="page-head"><div><h1 class="page-title">Dashboard</h1><div class="page-subtitle">Your money, clearly tracked.</div></div><a class="btn-soft" href="add.html"><i class="bi bi-plus-lg"></i> Add</a></div><div class="hero mb-3"><div class="small opacity-75">Available to spend</div><div class="hero-amount">${money(avail)}</div><div class="mt-2 small opacity-75">Total ${money(total)} <span class="dot-sep">•</span> Savings locked ${money(st)}</div></div><div class="row g-3"><div class="col-6"><div class="cardx stat-card"><div class="stat-icon stat-blue"><i class="bi bi-wallet2"></i></div><div class="stat-label">Total Income</div><div class="stat-value">${money(totalInc)}</div></div></div><div class="col-6"><div class="cardx stat-card"><div class="stat-icon stat-green"><i class="bi bi-graph-up-arrow"></i></div><div class="stat-label">Total Expense</div><div class="stat-value">${money(totalExp)}</div></div></div><div class="col-6"><div class="cardx stat-card"><div class="stat-icon stat-red"><i class="bi bi-receipt"></i></div><div class="stat-label">This Month</div><div class="stat-value">${money(monthExp)}</div></div></div><div class="col-6"><div class="cardx stat-card"><div class="stat-icon stat-yellow"><i class="bi bi-list-check"></i></div><div class="stat-label">Transactions</div><div class="stat-value">${list.length}</div></div></div></div><div class="section-title">Balances</div><div class="cardx overflow-hidden">${balanceRow("bi-cash-stack","Cash",p.cash,"stat-green","Cash in hand")}${balanceRow("bi-bank","Bank",p.bank,"stat-blue","Bank account")}${balanceRow("bi-phone","UPI",p.bank,"stat-purple","Linked to Bank")}</div><div class="section-title d-flex justify-content-between align-items-center"><span>Recent transactions</span><a class="small fw-bold text-decoration-none" href="history.html">View all</a></div><div class="cardx overflow-hidden">${recent.map(txHtml).join("")||`<div class="empty"><i class="bi bi-inbox fs-2 d-block mb-2"></i>No transactions yet.</div>`}</div><div class="section-title chart-section-title"><span>Income &amp; Expense activity</span><div class="chart-switcher" role="group" aria-label="Expense chart range"><button type="button" class="chart-range ${chartRange==="daily"?"active":""}" data-range="daily">Daily</button><button type="button" class="chart-range ${chartRange==="weekly"?"active":""}" data-range="weekly">Weekly</button><button type="button" class="chart-range ${chartRange==="monthly"?"active":""}" data-range="monthly">Monthly</button></div></div><div class="cardx chart-box"><div class="chart-caption"><strong id="chartTitle">${chartTitle}</strong><div class="chart-caption-right"><span id="chartYearInfo">Year: —</span><span id="chartHint"></span></div></div><div class="chart-scroll"><canvas id="miniChart" aria-label="Expense activity chart"></canvas></div></div><div class="section-title d-flex justify-content-between align-items-center"><span>Financial Health</span><a class="small fw-bold text-decoration-none" href="health.html">Open dashboard</a></div><a class="cardx health-dashboard-card" href="health.html"><div class="health-dashboard-icon"><i class="bi bi-activity"></i></div><div class="health-dashboard-copy"><strong>Financial Health Dashboard</strong><span>Cash flow, savings rate, budget usage and monthly balance.</span></div><div class="health-dashboard-arrow"><i class="bi bi-chevron-right"></i></div></a>`);
   drawChart($("#miniChart")[0],list,chartRange);
 }
 function balanceRow(icon,name,value,theme,note){return `<div class="balance-row border-bottom"><div class="balance-left"><div class="balance-icon ${theme}"><i class="bi ${icon}"></i></div><div><div class="balance-name">${name}</div><div class="balance-note">${note}</div></div></div><div class="balance-value">${money(value)}</div></div>`}
@@ -1154,5 +1224,5 @@ else if(rememberedSession){
   localStorage.removeItem(REMEMBER_SESSION_KEY);
   localStorage.removeItem(REMEMBER_KEY);
 }
-if(state.session&&user()&&user().approved){shell();const map={dashboard:renderDashboard,add:renderAdd,transfer:renderTransfer,history:renderHistory,calendar:renderCalendar,profile:renderProfile,savings:renderSavings,tutorial:renderTutorial,settings:renderSettings,backup:renderBackup,admin:renderAdmin};if(currentRoute==="admin"&&user().role!=="admin"){window.location.href="index.html"}else{(map[currentRoute]||renderDashboard)()}}else{state.session=null;sessionStorage.removeItem(SESSION_KEY);applyPreferences(defaultPreferences());if(currentRoute!=="dashboard"){window.location.href="index.html"}else renderAuth()}
+if(state.session&&user()&&user().approved){shell();const map={dashboard:renderDashboard,add:renderAdd,transfer:renderTransfer,history:renderHistory,calendar:renderCalendar,health:renderHealth,profile:renderProfile,savings:renderSavings,tutorial:renderTutorial,settings:renderSettings,backup:renderBackup,admin:renderAdmin};if(currentRoute==="admin"&&user().role!=="admin"){window.location.href="index.html"}else{(map[currentRoute]||renderDashboard)()}}else{state.session=null;sessionStorage.removeItem(SESSION_KEY);applyPreferences(defaultPreferences());if(currentRoute!=="dashboard"){window.location.href="index.html"}else renderAuth()}
 })();

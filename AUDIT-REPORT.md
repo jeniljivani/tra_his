@@ -1,31 +1,35 @@
-# TraHis v38 — Tutorial Module QA Report
+# TraHis v40 — Financial Health Dashboard QA Report
 
-## Scope
-v38 is based on the TraHis v37 baseline. This release fixes the blank Tutorial module and adds an interactive, local-first tutorial experience without changing the financial data model.
+## Release scope
 
-## Tutorial functionality
-- Interactive 10-topic guided tour
-- Previous / Next navigation with progress indicator
-- Direct links to relevant TraHis modules
-- Quick module guide
-- FAQ accordion
-- Tutorial completion state stored locally
-- Responsive layout for desktop, tablet and mobile
-- Existing theme system preserved (Classic, Glassmorphism, Neumorphism, Aurora, Liquid Glass)
-- Light/dark mode and theme colors preserved
+TraHis v40 uses the v38 project as its baseline and adds a dedicated Financial Health Dashboard while preserving the existing local-first transaction, savings, calendar, AI, tutorial, theme and shared-component architecture.
+
+## Added functionality
+- Dedicated `health.html` Financial Health module.
+- Current-month-first financial health view with a custom month selector for months represented in local transaction history.
+- Transparent 0–100 health indicator based on monthly cash flow, savings rate, budget usage and expense trend.
+- Monthly income, expense, net cash flow and closing balance KPIs.
+- Savings-rate and budget-usage visual bars.
+- Current protected savings visibility (display only; not used to fabricate historical savings).
+- Highest expense day and largest expense details.
+- Cash / Bank / UPI expense breakdown.
+- Previous-month comparison.
+- Dashboard shortcut card and shared drawer navigation entry.
+- PWA manifest shortcut and v40 service-worker cache entry.
 
 ## Validation
-- app.js syntax: PASS
-- components.js syntax: PASS
-- sw.js syntax: PASS
+- HTML pages: 12
+- Missing local references: 0
+- Duplicate static IDs: 0
+- Native `alert` / `confirm` / `prompt`: 0
+- Unsupported Bootstrap Icons: 0
+- `app.js` syntax: PASS
+- `components.js` syntax: PASS
+- `sw.js` syntax: PASS
 - Manifest JSON: PASS
-- Missing local HTML references: 0
-- Native alert/confirm/prompt calls: 0
-- Service-worker cache: v38
-- Tutorial route mapping: PASS
-- Tutorial renderer: implemented
-- Tutorial interaction handlers: implemented
-- Existing data/storage model: unchanged
+- Service-worker cache: v40
 
-## Runtime limitation
-This environment does not provide a reliable physical-device/browser matrix, so this report does not claim testing on every Android/iOS/browser combination.
+## Notes
+Financial Health is an analytical view of locally stored TraHis records. Historical months use the transaction ledger for income, expense, balances and trends. The currently configured monthly budget is explicitly presented as the current budget setting; TraHis does not store historical budget snapshots. Protected savings is displayed as the current protected amount rather than being presented as a historical monthly value.
+
+Physical device/browser matrix testing is not claimed from this environment.

@@ -27,6 +27,7 @@
     <a href="savings.html"><i class="bi bi-piggy-bank"></i><span>Savings</span></a>
     <a href="tutorial.html"><i class="bi bi-play-circle"></i><span>App Tutorial</span></a>
     <a href="calendar.html"><i class="bi bi-calendar3"></i><span>Calendar</span></a>
+    <a href="health.html"><i class="bi bi-activity"></i><span>Financial Health</span></a>
     <a href="settings.html"><i class="bi bi-gear"></i><span>Settings</span></a>
     <a href="backup.html"><i class="bi bi-cloud-arrow-down"></i><span>Backup &amp; Restore</span></a>
     <a id="adminNav" href="admin.html"><i class="bi bi-shield-check"></i><span>Admin</span></a>
