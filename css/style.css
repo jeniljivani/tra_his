@@ -671,3 +671,36 @@ html[data-theme="dark"][data-visual-style="glass"] .history-total-card,
 html[data-theme="dark"][data-visual-style="glass"] .filter-bar{
   color:#e5e7eb;
 }
+
+
+/* ===== TraHis custom action dialog ===== */
+body.dialog-open{overflow:hidden}
+#appDialogRoot{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;padding:18px;visibility:hidden;opacity:0;pointer-events:none;transition:opacity .18s ease,visibility .18s ease}
+#appDialogRoot.open{visibility:visible;opacity:1;pointer-events:auto}
+.app-dialog-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.52);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+.app-dialog-card{position:relative;width:min(440px,100%);padding:22px;border:1px solid var(--line);border-radius:24px;background:var(--card);color:var(--ink);box-shadow:0 24px 70px rgba(15,23,42,.22);transform:translateY(8px) scale(.98);transition:transform .18s ease;z-index:1}
+#appDialogRoot.open .app-dialog-card{transform:translateY(0) scale(1)}
+.app-dialog-icon{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);font-size:21px;margin-bottom:14px}
+.app-dialog-icon.danger{background:#fff1f2;color:#dc3545}
+.app-dialog-content h2{font-size:19px;line-height:1.25;font-weight:900;margin:0 0 7px}
+.app-dialog-content p{font-size:13px;line-height:1.65;color:var(--muted);margin:0;white-space:pre-line}
+.app-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:21px}
+.app-dialog-btn{min-height:42px;padding:9px 16px;border-radius:12px;font-size:13px;font-weight:850;cursor:pointer;border:1px solid var(--line);background:var(--surface-soft);color:var(--ink);transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
+.app-dialog-btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(15,23,42,.08)}
+.app-dialog-btn:focus-visible{outline:3px solid color-mix(in srgb,var(--primary) 25%,transparent);outline-offset:2px}
+.app-dialog-confirm{border-color:transparent;background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff;box-shadow:0 8px 20px color-mix(in srgb,var(--primary) 22%,transparent)}
+.app-dialog-confirm.danger{background:linear-gradient(135deg,#dc3545,#b42332);box-shadow:0 8px 20px rgba(220,53,69,.20)}
+html[data-theme="dark"] .app-dialog-card{background:#111827;border-color:#263247;box-shadow:0 28px 80px rgba(0,0,0,.48)}
+html[data-theme="dark"] .app-dialog-icon.danger{background:rgba(127,29,29,.28);color:#fda4af}
+html[data-theme="dark"] .app-dialog-btn{background:#172033;border-color:#263247;color:#e5e7eb}
+html[data-theme="dark"] .app-dialog-content p{color:#94a3b8}
+html[data-visual-style="glass"] .app-dialog-card{background:var(--glass-bg-strong);border-color:var(--glass-border);box-shadow:var(--glass-shadow);backdrop-filter:blur(24px) saturate(155%);-webkit-backdrop-filter:blur(24px) saturate(155%)}
+html[data-visual-style="glass"] .app-dialog-btn{background:var(--glass-bg-soft);border-color:var(--glass-border);box-shadow:var(--glass-shadow-soft);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+html[data-theme="dark"][data-visual-style="glass"] .app-dialog-card{background:rgba(15,23,42,.78)}
+html[data-theme="dark"][data-visual-style="glass"] .app-dialog-btn{background:rgba(30,41,59,.48)}
+@media(max-width:480px){
+  #appDialogRoot{padding:14px}
+  .app-dialog-card{padding:19px;border-radius:20px}
+  .app-dialog-actions{display:grid;grid-template-columns:1fr 1fr}
+  .app-dialog-btn{width:100%}
+}

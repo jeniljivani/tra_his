@@ -1,13 +1,17 @@
-# TraHis v25 — Icon Fix / Stability Patch
+# TraHis v26 — UI/Interaction Hardening Audit
 
-## Patch
-- Fixed missing **Settings** icon in the side drawer.
-- Root cause: the project bundled Bootstrap Icons stylesheet does not define `bi-sliders2`, while the drawer referenced that unsupported class.
-- Replaced the unsupported class with bundled `bi-gear-fill` across all shared drawer markup and tutorial metadata.
-- Bumped the service-worker cache namespace to `trahis-v25` so the corrected HTML is not hidden by an older cached shell.
+## Changes
+- Replaced all native browser confirmation prompts with one reusable TraHis custom action dialog.
+- Dialog content, icon, title and action labels are dynamic per operation while the UI component remains identical.
+- Added keyboard Escape handling, focus trapping, backdrop cancellation and ARIA alertdialog semantics.
+- Settings drawer icon changed from filled gear to outline `bi-gear` to match the navigation icon style.
+- Removed two unsupported bundled Bootstrap Icons (`trash3` and `heart-pulse-fill`) and replaced them with verified bundled outline icons.
+- Service worker cache bumped to v26.
 
-## Verification
-- No remaining `bi-sliders2` references in HTML/JS.
-- `bi-gear-fill` exists in the bundled `assets/bootstrap-icons.css`.
-- All HTML pages retain the Settings drawer entry.
-- Service-worker cache namespace is v25.
+## Validation
+- app.js syntax: PASS
+- sw.js syntax: PASS
+- native alert/confirm/prompt calls: 0
+- unsupported Bootstrap Icons: 0
+- settings icon reference: PASS
+- custom dialog CSS/JS presence: PASS

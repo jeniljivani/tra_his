@@ -1,10 +1,10 @@
 /* TraHis - offline local PWA
-   v24: settings + glassmorphism production hardening
+   v26: settings + glassmorphism + custom dialogs
 */
 (function(){
 "use strict";
 
-const APP_VERSION = "v24";
+const APP_VERSION = "v26";
 const MASTER = { username:"tra_his", password:"tra_his@2503", name:"Master Admin" };
 const DB_KEY = "trahis_state_v5";
 const LEGACY_DB_KEY = "trahis_state_v4";
@@ -198,6 +198,46 @@ function showToast(msg,type="primary"){
   const icon=type==="danger"?"bi-exclamation-triangle":"bi-check-circle";
   $("#toastBox").html(`<div class="toast show toast-${esc(type)} border-0 shadow-sm" role="alert"><div class="toast-body"><i class="bi ${icon} me-2"></i>${esc(msg)}</div></div>`);
   setTimeout(()=>$("#toastBox").empty(),2800);
+}
+
+/* ===== TraHis custom action dialog =====
+   One reusable dialog UI replaces native browser confirmation prompts.
+   The content, icon and action labels are supplied by the caller while
+   the component styling remains identical across the entire application.
+*/
+let activeDialogResolve=null;
+let activeDialogKeyHandler=null;
+function closeAppDialog(result=false){
+  const root=document.getElementById("appDialogRoot");
+  if(!root)return;
+  if(activeDialogKeyHandler){document.removeEventListener("keydown",activeDialogKeyHandler);activeDialogKeyHandler=null;}
+  const resolve=activeDialogResolve;activeDialogResolve=null;
+  root.classList.remove("open");
+  document.body.classList.remove("dialog-open");
+  setTimeout(()=>{if(!root.classList.contains("open"))root.innerHTML=""},180);
+  if(resolve)resolve(Boolean(result));
+}
+function showConfirmDialog({title="Confirm action",message="Are you sure?",confirmText="Confirm",cancelText="Cancel",icon="bi-question-circle",danger=false}={}){
+  if(activeDialogResolve)closeAppDialog(false);
+  let root=document.getElementById("appDialogRoot");
+  if(!root){
+    root=document.createElement("div");
+    root.id="appDialogRoot";
+    document.body.appendChild(root);
+  }
+  const confirmClass=danger?"app-dialog-confirm danger":"app-dialog-confirm";
+  root.innerHTML=`<div class="app-dialog-backdrop" data-dialog-cancel></div><section class="app-dialog-card" role="alertdialog" aria-modal="true" aria-labelledby="appDialogTitle" aria-describedby="appDialogMessage"><div class="app-dialog-icon ${danger?"danger":""}"><i class="bi ${esc(icon)}"></i></div><div class="app-dialog-content"><h2 id="appDialogTitle">${esc(title)}</h2><p id="appDialogMessage">${esc(message)}</p></div><div class="app-dialog-actions"><button type="button" class="app-dialog-btn app-dialog-cancel" data-dialog-cancel>${esc(cancelText)}</button><button type="button" class="app-dialog-btn ${confirmClass}" data-dialog-confirm>${esc(confirmText)}</button></div></section>`;
+  root.classList.add("open");
+  document.body.classList.add("dialog-open");
+  const confirmBtn=root.querySelector("[data-dialog-confirm]");
+  const cancelBtn=root.querySelector("[data-dialog-cancel]:not(.app-dialog-backdrop)");
+  confirmBtn?.focus();
+  root.querySelector("[data-dialog-confirm]")?.addEventListener("click",()=>closeAppDialog(true),{once:true});
+  cancelBtn?.addEventListener("click",()=>closeAppDialog(false),{once:true});
+  root.querySelector(".app-dialog-backdrop")?.addEventListener("click",()=>closeAppDialog(false),{once:true});
+  activeDialogKeyHandler=e=>{if(e.key==="Escape"){e.preventDefault();closeAppDialog(false)}else if(e.key==="Tab"){const focusables=[...root.querySelectorAll("button:not([disabled])")];if(!focusables.length)return;const first=focusables[0],last=focusables[focusables.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}};
+  document.addEventListener("keydown",activeDialogKeyHandler);
+  return new Promise(resolve=>{activeDialogResolve=resolve});
 }
 
 /* ===== TraHis Local AI Assistant =====
@@ -555,7 +595,7 @@ function formatBytes(n){if(!Number.isFinite(n)||n<0)return "—";if(n<1024)retur
 function renderBackup(){
   const h=backupHealth(),status=h.healthy?"Healthy":"Needs attention",statusClass=h.healthy?"health-good":"health-warn",last=h.lastBackup&&!Number.isNaN(h.lastBackup.getTime())?h.lastBackup.toLocaleString():"Never";
   const issuesHtml=h.issues.length?`<div class="health-issues">${h.issues.map(x=>`<div><i class="bi bi-exclamation-triangle-fill"></i><span>${esc(x)}</span></div>`).join("")}</div>`:`<div class="health-ok"><i class="bi bi-check-circle-fill"></i><span>Your local backup data looks healthy.</span></div>`;
-  $("#main").html(`<div class="page-head mb-3"><div><h1 class="page-title">Backup & Restore</h1><div class="page-subtitle">Keep a safe copy of your local TraHis data.</div></div><div class="backup-head-icon"><i class="bi bi-shield-check"></i></div></div><div class="cardx backup-health-card mb-3"><div class="backup-health-top"><div><div class="backup-health-label"><i class="bi bi-heart-pulse-fill"></i> Backup Health</div><div class="backup-health-status ${statusClass}">${status}</div><div class="small text-muted mt-1">Local backup and data consistency check</div></div><button id="scanBackupHealth" class="btn btn-soft"><i class="bi bi-arrow-clockwise"></i> Scan now</button></div><div class="row g-2 backup-health-stats"><div class="col-6 col-md-3"><div class="health-stat"><span>Last backup</span><strong>${esc(last)}</strong></div></div><div class="col-6 col-md-3"><div class="health-stat"><span>Records</span><strong>${h.records}</strong></div></div><div class="col-6 col-md-3"><div class="health-stat"><span>Data size</span><strong>${formatBytes(h.sizeBytes)}</strong></div></div><div class="col-6 col-md-3"><div class="health-stat"><span>Users</span><strong>${h.users}</strong></div></div></div>${issuesHtml}<div class="backup-health-note"><i class="bi bi-info-circle"></i><span>Backup Health checks only this browser's local TraHis data. Nothing is uploaded to a server.</span></div></div><div class="row g-3"><div class="col-12 col-md-6"><div class="cardx form-card h-100"><div class="stat-icon stat-blue"><i class="bi bi-download"></i></div><h5 class="fw-bold">Export backup</h5><p class="text-muted small">Download a JSON backup of your TraHis data.</p><button id="exportBtn" class="btn btn-primary">Download backup</button></div></div><div class="col-12 col-md-6"><div class="cardx form-card h-100"><div class="stat-icon stat-green"><i class="bi bi-upload"></i></div><h5 class="fw-bold">Restore backup</h5><p class="text-muted small">Restore a previous JSON backup on this device.</p><button id="restoreBtn" class="btn btn-soft">Choose backup</button><div class="small text-danger mt-2">Restoring replaces current local data.</div></div></div></div><div class="cardx p-3 mt-3"><strong>Privacy</strong><div class="small text-muted mt-1">TraHis stores data in this browser/device only. There is no cloud sync in this version.</div></div>`)}
+  $("#main").html(`<div class="page-head mb-3"><div><h1 class="page-title">Backup & Restore</h1><div class="page-subtitle">Keep a safe copy of your local TraHis data.</div></div><div class="backup-head-icon"><i class="bi bi-shield-check"></i></div></div><div class="cardx backup-health-card mb-3"><div class="backup-health-top"><div><div class="backup-health-label"><i class="bi bi-heart"></i> Backup Health</div><div class="backup-health-status ${statusClass}">${status}</div><div class="small text-muted mt-1">Local backup and data consistency check</div></div><button id="scanBackupHealth" class="btn btn-soft"><i class="bi bi-arrow-clockwise"></i> Scan now</button></div><div class="row g-2 backup-health-stats"><div class="col-6 col-md-3"><div class="health-stat"><span>Last backup</span><strong>${esc(last)}</strong></div></div><div class="col-6 col-md-3"><div class="health-stat"><span>Records</span><strong>${h.records}</strong></div></div><div class="col-6 col-md-3"><div class="health-stat"><span>Data size</span><strong>${formatBytes(h.sizeBytes)}</strong></div></div><div class="col-6 col-md-3"><div class="health-stat"><span>Users</span><strong>${h.users}</strong></div></div></div>${issuesHtml}<div class="backup-health-note"><i class="bi bi-info-circle"></i><span>Backup Health checks only this browser's local TraHis data. Nothing is uploaded to a server.</span></div></div><div class="row g-3"><div class="col-12 col-md-6"><div class="cardx form-card h-100"><div class="stat-icon stat-blue"><i class="bi bi-download"></i></div><h5 class="fw-bold">Export backup</h5><p class="text-muted small">Download a JSON backup of your TraHis data.</p><button id="exportBtn" class="btn btn-primary">Download backup</button></div></div><div class="col-12 col-md-6"><div class="cardx form-card h-100"><div class="stat-icon stat-green"><i class="bi bi-upload"></i></div><h5 class="fw-bold">Restore backup</h5><p class="text-muted small">Restore a previous JSON backup on this device.</p><button id="restoreBtn" class="btn btn-soft">Choose backup</button><div class="small text-danger mt-2">Restoring replaces current local data.</div></div></div></div><div class="cardx p-3 mt-3"><strong>Privacy</strong><div class="small text-muted mt-1">TraHis stores data in this browser/device only. There is no cloud sync in this version.</div></div>`)}
 function renderAdmin(){
   if(user()?.role!=="admin"){go("dashboard");return}
   const pending=state.users.filter(u=>u.role!=="admin"&&!u.approved),all=state.users.filter(u=>u.role!=="admin");
@@ -576,8 +616,16 @@ function doLogin(username,password,remember){
   }
   return "";
 }
-function logout(){
-  if(!confirm("Are you sure you want to logout?"))return;
+async function logout(){
+  const ok=await showConfirmDialog({
+    title:"Log out of TraHis?",
+    message:"You will return to the login screen. Your saved local finance data will remain on this device.",
+    confirmText:"Log out",
+    cancelText:"Stay signed in",
+    icon:"bi-box-arrow-right",
+    danger:true
+  });
+  if(!ok)return;
   state.session=null;
   sessionStorage.removeItem(SESSION_KEY);
   localStorage.removeItem(REMEMBER_KEY);
@@ -697,11 +745,11 @@ $(document).on("submit","#txForm",function(e){e.preventDefault();const amount=Nu
 $(document).on("click","#cancelEdit",()=>{editingId=null;go("history")});
 $(document).on("click",".editTx",function(){editingId=$(this).data("id");go("add",`?edit=${encodeURIComponent(editingId)}`)});
 $(document).on("click","[data-history-page]",function(){const p=Number($(this).data("history-page"));if(p>=1){historyPage=p;renderHistoryList()}});
-$(document).on("click",".deleteTx",function(){const id=$(this).data("id"),t=txs().find(x=>x.id===id);if(!t||!confirm("Delete this transaction? The balance will be reversed."))return;const p=profile();applyRecord(p,t,-1);if(!validAccounts(p)||availableBalance()< -0.00001){applyRecord(p,t,1);return showToast("This transaction cannot be deleted because later transactions depend on its balance.","danger")}state.transactions=state.transactions.filter(x=>x.id!==id);save();renderHistoryList();showToast("Transaction deleted")});
+$(document).on("click",".deleteTx",async function(){const id=$(this).data("id"),t=txs().find(x=>x.id===id);if(!t)return;const ok=await showConfirmDialog({title:"Delete transaction?",message:"This transaction will be removed and its balance effect will be reversed. This action cannot be undone.",confirmText:"Delete transaction",cancelText:"Keep transaction",icon:"bi-trash",danger:true});if(!ok)return;const p=profile();applyRecord(p,t,-1);if(!validAccounts(p)||availableBalance()< -0.00001){applyRecord(p,t,1);return showToast("This transaction cannot be deleted because later transactions depend on its balance.","danger")}state.transactions=state.transactions.filter(x=>x.id!==id);save();renderHistoryList();showToast("Transaction deleted")});
 $(document).on("submit","#transferForm",function(e){e.preventDefault();const from=$("#from").val(),to=$("#to").val(),amount=Number($("#trAmount").val());if(from===to)return showToast("From and To must be different.","danger");if(!(amount>0)||!Number.isFinite(amount))return showToast("Enter a valid amount.","danger");const p=profile();if(!["cash","bank"].includes(from)||!["cash","bank"].includes(to))return showToast("Invalid transfer account.","danger");if(amount>Number(p[from]||0)+0.00001)return showToast(`Insufficient ${from} balance.`,"danger");p[from]-=amount;p[to]+=amount;state.transactions.push({id:uid(),userId:state.session,kind:"transfer",method:"transfer",amount,note:$("#trNote").val().trim()||`${from} → ${to}`,date:new Date().toISOString(),from,to});save();showToast("Transfer completed");go("history")});
 $(document).on("click","#saveSetupBtn",function(){const p=profile(),s=p.savings,pct=Math.max(0,Math.min(100,Number($("#savePercent").val())||0)),budget=Math.max(0,Number($("#monthlyBudget").val())||0),target=totalBalance()*pct/100,current=savingsTotal();if(target+0.00001<current)return showToast("Savings reserve cannot be reduced here. Use ‘Use savings’ first.","danger");s.percent=pct;s.monthlyBudget=budget;s.enabled=current>0||target>0;save();showToast("Savings settings saved");renderSavings()});
 $(document).on("click","#reserveBtn",function(){const p=profile(),s=p.savings,pct=Math.max(0,Math.min(100,Number($("#savePercent").val())||0)),target=totalBalance()*pct/100,current=savingsTotal(),diff=target-current;if(diff< -0.00001)return showToast("New reserve is lower than current savings. Use ‘Use savings’ first.","danger");if(diff>0)s.categories.main+=diff;s.total=CATS.reduce((a,k)=>a+s.categories[k],0);s.percent=pct;s.enabled=s.total>0;save();showToast(diff>0?`Savings reserve increased by ${money(diff)}.`:"Savings reserve already set.");renderSavings()});
-$(document).on("click","#resetSavingsBtn",function(){const p=profile(),s=p.savings;if(!p||!s)return;if(!confirm("Reset all Savings settings? This will set Savings % and monthly budget to 0 and clear all protected savings categories. Your Cash/Bank balance will not be changed."))return;s.percent=0;s.monthlyBudget=0;s.enabled=false;CATS.forEach(k=>s.categories[k]=0);s.total=0;save();showToast("Savings reset to 0.");renderSavings()});
+$(document).on("click","#resetSavingsBtn",async function(){const p=profile(),s=p?.savings;if(!p||!s)return;const ok=await showConfirmDialog({title:"Reset Savings?",message:"Savings % and monthly budget will be set to 0, and all protected savings categories will be cleared. Your Cash/Bank balance will not be changed.",confirmText:"Reset savings",cancelText:"Keep savings",icon:"bi-arrow-counterclockwise",danger:true});if(!ok)return;s.percent=0;s.monthlyBudget=0;s.enabled=false;CATS.forEach(k=>s.categories[k]=0);s.total=0;save();showToast("Savings reset to 0.");renderSavings()});
 $(document).on("submit","#saveMoveForm",function(e){e.preventDefault();const s=profile().savings,from=$("#saveFrom").val(),to=$("#saveTo").val(),amt=Number($("#saveMoveAmount").val());if(from===to)return showToast("From and To must be different.","danger");if(!(amt>0)||amt>s.categories[from]+0.00001)return showToast(`Insufficient ${CAT_LABEL[from]} amount.`,"danger");s.categories[from]-=amt;s.categories[to]+=amt;s.total=CATS.reduce((a,k)=>a+s.categories[k],0);save();showToast("Savings moved");renderSavings()});
 $(document).on("submit","#saveWithdrawForm",function(e){e.preventDefault();const s=profile().savings,from=$("#saveWithdrawFrom").val(),amt=Number($("#saveWithdrawAmount").val());if(!(amt>0)||amt>s.categories[from]+0.00001)return showToast(`Insufficient ${CAT_LABEL[from]} amount.`,"danger");s.categories[from]-=amt;s.total=CATS.reduce((a,k)=>a+s.categories[k],0);s.enabled=s.total>0;save();showToast(`${money(amt)} released from savings.`);renderSavings()});
 $(document).on("click","[data-visual-style]",function(){
@@ -733,7 +781,7 @@ $(document).on("change","#restoreFile",function(){
   const f=this.files&&this.files[0];if(!f)return;
   if(f.size>10*1024*1024){showToast("Backup file is too large.","danger");this.value="";return}
   const r=new FileReader();
-  r.onload=()=>{
+  r.onload=async()=>{
     try{
       const candidate=JSON.parse(r.result);
       if(!Array.isArray(candidate.users)||!Array.isArray(candidate.transactions)||!candidate.profiles||typeof candidate.profiles!=="object")throw Error();
@@ -755,7 +803,8 @@ $(document).on("change","#restoreFile",function(){
         candidate.profiles[id]=p;
       });
       candidate.users.forEach(u=>{if(!candidate.profiles[u.id])candidate.profiles[u.id]={name:u.name,username:u.username,cash:0,bank:0,upi:0,savings:blankSavings(),preferences:defaultPreferences()}});
-      if(!confirm("Restore this backup? Current local data will be replaced."))return;
+      const ok=await showConfirmDialog({title:"Restore this backup?",message:"Current local TraHis data will be replaced by this backup. This action cannot be undone unless you have another backup.",confirmText:"Restore backup",cancelText:"Cancel",icon:"bi-cloud-arrow-down",danger:true});
+      if(!ok)return;
       const active=state.session&&candidate.users.some(u=>u.id===state.session)?state.session:null;
       state=candidate;state.session=active;save();
       if(!state.session){sessionStorage.removeItem(SESSION_KEY);renderAuth()}else go("dashboard");
@@ -767,7 +816,7 @@ $(document).on("change","#restoreFile",function(){
 });
 $(document).on("click",".approveUser",function(){if(user()?.role!=="admin")return;const u=state.users.find(x=>x.id===$(this).data("id"));if(u){u.approved=true;save();renderAdmin();showToast("User approved")}});
 $(document).on("click",".revokeUser",function(){if(user()?.role!=="admin")return;const u=state.users.find(x=>x.id===$(this).data("id"));if(u&&u.id!==state.session){u.approved=false;save();renderAdmin();showToast("User access revoked")}});
-$(document).on("click",".deleteUser",function(){if(user()?.role!=="admin")return;const id=$(this).data("id");if(id===state.session)return showToast("You cannot delete the current master account.","danger");if(!confirm("Delete this user and all their local records?"))return;state.users=state.users.filter(x=>x.id!==id);delete state.profiles[id];state.transactions=state.transactions.filter(t=>t.userId!==id);save();renderAdmin();showToast("User deleted")});
+$(document).on("click",".deleteUser",async function(){if(user()?.role!=="admin")return;const id=$(this).data("id");if(id===state.session)return showToast("You cannot delete the current master account.","danger");const target=state.users.find(x=>x.id===id);const ok=await showConfirmDialog({title:"Delete user?",message:`${target?.name||target?.username||"This user"} and all of their local records will be permanently deleted.`,confirmText:"Delete user",cancelText:"Keep user",icon:"bi-person-x",danger:true});if(!ok)return;state.users=state.users.filter(x=>x.id!==id);delete state.profiles[id];state.transactions=state.transactions.filter(t=>t.userId!==id);save();renderAdmin();showToast("User deleted")});
 $("#headerMenuBtn").on("click",openDrawer);
 $("#themeToggle").on("click",toggleTheme);
 $("#closeDrawer,#drawerOverlay").on("click",closeDrawer);
