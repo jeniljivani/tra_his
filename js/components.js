@@ -26,6 +26,7 @@
     <a href="profile.html"><i class="bi bi-person"></i><span>Profile</span></a>
     <a href="savings.html"><i class="bi bi-piggy-bank"></i><span>Savings</span></a>
     <a href="tutorial.html"><i class="bi bi-play-circle"></i><span>App Tutorial</span></a>
+    <a href="calendar.html"><i class="bi bi-calendar3"></i><span>Calendar</span></a>
     <a href="settings.html"><i class="bi bi-gear"></i><span>Settings</span></a>
     <a href="backup.html"><i class="bi bi-cloud-arrow-down"></i><span>Backup &amp; Restore</span></a>
     <a id="adminNav" href="admin.html"><i class="bi bi-shield-check"></i><span>Admin</span></a>
@@ -74,10 +75,26 @@
     if(top+Math.min(measured.height,maxH)>window.innerHeight-8)top=Math.max(8,r.top-measured.height-margin);
     el.style.left=`${Math.round(left)}px`;el.style.top=`${Math.round(top)}px`;
   }
+  function positionDatePicker(el,anchor){
+    const r=anchor.getBoundingClientRect();
+    const margin=8, viewportPad=10;
+    el.style.width=`min(430px,calc(100vw - 20px))`;
+    el.style.maxHeight=`calc(100vh - 20px)`;
+    const measured=el.getBoundingClientRect();
+    const availableBelow=window.innerHeight-r.bottom-margin;
+    const availableAbove=r.top-margin;
+    let top=r.bottom+margin;
+    if(measured.height>availableBelow && availableAbove>availableBelow) top=Math.max(viewportPad,r.top-measured.height-margin);
+    else top=Math.min(top,window.innerHeight-measured.height-viewportPad);
+    const left=Math.min(Math.max(viewportPad,r.left),Math.max(viewportPad,window.innerWidth-measured.width-viewportPad));
+    el.style.left=`${Math.round(left)}px`;
+    el.style.top=`${Math.round(Math.max(viewportPad,top))}px`;
+  }
   function closeSelect(){
     if(!openSelect)return;
     openSelect.menu.classList.remove("open");
     openSelect.trigger.setAttribute("aria-expanded","false");
+    openSelect.wrapper.classList.remove("is-open");
     openSelect=null;
   }
   function openSelectMenu(wrapper){
@@ -102,6 +119,7 @@
     document.body.appendChild(menu);
     openSelect={wrapper,select,trigger,menu};
     trigger.setAttribute("aria-expanded","true");
+    wrapper.classList.add("is-open");
     menu.classList.add("open");positionFloating(menu,trigger);
     const active=menu.querySelector(`[data-index="${select.selectedIndex}"]`);active?.scrollIntoView({block:"nearest"});
   }
@@ -152,6 +170,8 @@
   }
   function closeDate(){
     if(!openDate)return;
+    const trigger=openDate.field.querySelector(".tr-date-trigger");
+    if(trigger)trigger.setAttribute("aria-expanded","false");
     openDate.panel.remove();openDate=null;
   }
   function renderDatePicker(field){
@@ -182,20 +202,20 @@
       let timeHtml="";
       if(datetime){
         const h12=(selected.h%12)||12, ampm=selected.h>=12?"PM":"AM";
-        const hours=[12,1,2,3,4,5,6,7,8,9,10,11], mins=[0,15,30,45];
-        timeHtml=`<div class="tr-time-panel"><div class="tr-time-title">Time</div><div class="tr-time-columns"><div>${hours.map(h=>`<button type="button" class="tr-time-btn ${h===h12?"active":""}" data-hour="${h}">${pad(h)}</button>`).join("")}</div><div>${mins.map(m=>`<button type="button" class="tr-time-btn ${m===Math.round(selected.min/15)*15%60?"active":""}" data-minute="${m}">${pad(m)}</button>`).join("")}</div><div>${["AM","PM"].map(a=>`<button type="button" class="tr-time-btn ${a===ampm?"active":""}" data-ampm="${a}">${a}</button>`).join("")}</div></div></div>`;
+        const hours=[1,2,3,4,5,6,7,8,9,10,11,12], mins=Array.from({length:60},(_,i)=>i);
+        timeHtml=`<div class="tr-time-panel"><div class="tr-time-title">Time</div><div class="tr-time-columns"><div>${hours.map(h=>`<button type="button" class="tr-time-btn ${h===h12?"active":""}" data-hour="${h}">${pad(h)}</button>`).join("")}</div><div>${mins.map(m=>`<button type="button" class="tr-time-btn ${m===selected.min?"active":""}" data-minute="${m}">${pad(m)}</button>`).join("")}</div><div>${["AM","PM"].map(a=>`<button type="button" class="tr-time-btn ${a===ampm?"active":""}" data-ampm="${a}">${a}</button>`).join("")}</div></div></div>`;
       }
       panel.innerHTML=`<div class="tr-datepicker-head"><button type="button" class="tr-cal-nav" data-prev aria-label="Previous month"><i class="bi bi-chevron-left"></i></button><strong>${MONTHS[viewM]} ${viewY}</strong><button type="button" class="tr-cal-nav" data-next aria-label="Next month"><i class="bi bi-chevron-right"></i></button></div><div class="tr-weekdays">${DAYS.map(d=>`<span>${d}</span>`).join("")}</div><div class="tr-days">${cells}</div>${timeHtml}<div class="tr-datepicker-foot"><button type="button" class="tr-cal-link" data-clear>Clear</button><button type="button" class="tr-cal-link" data-today>Today</button><button type="button" class="tr-cal-done" data-done>Done</button></div>`;
       panel.querySelector("[data-prev]").onclick=()=>{viewM--;if(viewM<0){viewM=11;viewY--;}draw()};
       panel.querySelector("[data-next]").onclick=()=>{viewM++;if(viewM>11){viewM=0;viewY++;}draw()};
       panel.querySelectorAll(".tr-day").forEach(btn=>btn.onclick=()=>{p.y=+btn.dataset.y;p.m=+btn.dataset.m;p.day=+btn.dataset.d;viewY=p.y;viewM=p.m;write(false);draw()});
-      panel.querySelectorAll("[data-hour]").forEach(btn=>btn.onclick=()=>{const h=+btn.dataset.hour;p.h=h%12+(p.h>=12?12:0);write(false);draw()});
+      panel.querySelectorAll("[data-hour]").forEach(btn=>btn.onclick=()=>{const h=+btn.dataset.hour;const isPm=p.h>=12;p.h=(h%12)+(isPm?12:0);write(false);draw()});
       panel.querySelectorAll("[data-minute]").forEach(btn=>btn.onclick=()=>{p.min=+btn.dataset.minute;write(false);draw()});
       panel.querySelectorAll("[data-ampm]").forEach(btn=>btn.onclick=()=>{const isPm=btn.dataset.ampm==="PM";p.h=(p.h%12)+(isPm?12:0);write(false);draw()});
       panel.querySelector("[data-clear]").onclick=()=>{input.value="";field.querySelector(".tr-date-label").textContent=prettyDate("",datetime);input.dispatchEvent(new Event("input",{bubbles:true}));input.dispatchEvent(new Event("change",{bubbles:true}));closeDate()};
       panel.querySelector("[data-today]").onclick=()=>{const d=new Date();p={y:d.getFullYear(),m:d.getMonth(),day:d.getDate(),h:d.getHours(),min:Math.floor(d.getMinutes()/5)*5};viewY=p.y;viewM=p.m;write(false);draw()};
       panel.querySelector("[data-done]").onclick=()=>{write(true);closeDate()};
-      positionFloating(panel,field.querySelector(".tr-date-trigger"));
+      positionDatePicker(panel,field.querySelector(".tr-date-trigger"));
     }
     function write(close){input.value=formatDateValue(p,datetime);field.querySelector(".tr-date-label").textContent=prettyDate(input.value,datetime);input.dispatchEvent(new Event("input",{bubbles:true}));input.dispatchEvent(new Event("change",{bubbles:true}));if(close)closeDate();}
     draw();
@@ -207,7 +227,7 @@
     input.parentNode.insertBefore(field,input);field.appendChild(input);input.classList.add("tr-native-date");
     const trigger=document.createElement("button");trigger.type="button";trigger.className="tr-date-trigger";trigger.setAttribute("aria-haspopup","dialog");trigger.setAttribute("aria-expanded","false");trigger.innerHTML=`<span class="tr-date-label">${prettyDate(input.value,input.type==="datetime-local")}</span><i class="bi bi-calendar3"></i>`;
     field.insertBefore(trigger,input);
-    trigger.onclick=()=>{renderDatePicker(field);trigger.setAttribute("aria-expanded","true")};
+    trigger.onclick=()=>{if(openDate?.field===field){closeDate();return;}renderDatePicker(field);trigger.setAttribute("aria-expanded","true")};
     input.addEventListener("change",()=>{trigger.querySelector(".tr-date-label").textContent=prettyDate(input.value,input.type==="datetime-local")});
   }
   function enhanceAllDates(root=document){root.querySelectorAll('input[type="date"]:not([data-custom-enhanced]),input[type="datetime-local"]:not([data-custom-enhanced])').forEach(enhanceDateInput)}
@@ -223,6 +243,11 @@
     if(openSelect && !openSelect.wrapper.contains(e.target) && !openSelect.menu.contains(e.target))closeSelect();
     if(openDate && !openDate.field.contains(e.target) && !openDate.panel.contains(e.target))closeDate();
   });
-  window.addEventListener("resize",()=>{if(openSelect)positionFloating(openSelect.menu,openSelect.trigger);if(openDate)positionFloating(openDate.panel,openDate.field.querySelector(".tr-date-trigger"))});
-  window.addEventListener("scroll",()=>{if(openSelect)positionFloating(openSelect.menu,openSelect.trigger);if(openDate)positionFloating(openDate.panel,openDate.field.querySelector(".tr-date-trigger"))},true);
+  document.addEventListener("keydown",e=>{
+    if(e.key!=="Escape")return;
+    if(openSelect){closeSelect();e.preventDefault();return;}
+    if(openDate){closeDate();e.preventDefault();}
+  });
+  window.addEventListener("resize",()=>{if(openSelect)positionFloating(openSelect.menu,openSelect.trigger);if(openDate)positionDatePicker(openDate.panel,openDate.field.querySelector(".tr-date-trigger"))});
+  window.addEventListener("scroll",()=>{if(openSelect)positionFloating(openSelect.menu,openSelect.trigger);if(openDate)positionDatePicker(openDate.panel,openDate.field.querySelector(".tr-date-trigger"))},true);
 })();

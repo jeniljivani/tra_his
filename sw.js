@@ -1,6 +1,6 @@
-const CACHE="trahis-v31";
+const CACHE="trahis-v38";
 const ASSETS=[
-"./","./index.html","./add.html","./transfer.html","./history.html","./savings.html","./profile.html","./settings.html","./backup.html","./admin.html","./tutorial.html","./manifest.json","./sw.js",
+"./","./index.html","./add.html","./transfer.html","./history.html","./calendar.html","./savings.html","./profile.html","./settings.html","./backup.html","./admin.html","./tutorial.html","./manifest.json","./sw.js",
 "./css/style.css","./js/app.js","./js/components.js",
 "./assets/jquery.min.js","./assets/bootstrap.min.css","./assets/bootstrap.bundle.min.js",
 "./assets/bootstrap-icons.css","./assets/icon.svg","./assets/icon-192.png","./assets/icon-512.png"

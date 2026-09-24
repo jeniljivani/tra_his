@@ -1,10 +1,10 @@
 /* TraHis - offline local PWA
-   v31: shared components + custom controls + navigation-safe multi-theme stability
+   v38: tutorial module + monthly overview polish + future-date protection + exact-date AI lookup + responsive custom controls + shared components
 */
 (function(){
 "use strict";
 
-const APP_VERSION = "v31";
+const APP_VERSION = "v38";
 const MASTER = { username:"tra_his", password:"tra_his@2503", name:"Master Admin" };
 const DB_KEY = "trahis_state_v5";
 const LEGACY_DB_KEY = "trahis_state_v4";
@@ -23,7 +23,7 @@ const THEME_COLORS = {
   orange:{label:"Orange",primary:"#ea580c",primary2:"#f59e0b",soft:"#fff7ed"}
 };
 let state = loadState();
-const ROUTES = {dashboard:"index.html",add:"add.html",transfer:"transfer.html",history:"history.html",profile:"profile.html",savings:"savings.html",tutorial:"tutorial.html",settings:"settings.html",backup:"backup.html",admin:"admin.html"};
+const ROUTES = {dashboard:"index.html",add:"add.html",transfer:"transfer.html",history:"history.html",calendar:"calendar.html",profile:"profile.html",savings:"savings.html",tutorial:"tutorial.html",settings:"settings.html",backup:"backup.html",admin:"admin.html"};
 function routeFromLocation(){
   const file=(location.pathname.split("/").pop()||"index.html").toLowerCase();
   const found=Object.keys(ROUTES).find(k=>ROUTES[k].toLowerCase()===file);
@@ -203,6 +203,89 @@ function txs(){return state.transactions.filter(t=>t.userId===state.session).sor
 function totalBalance(){const p=profile();return (p?.cash||0)+(p?.bank||0)}
 function savingsTotal(){const p=profile();return p?.savings?CATS.reduce((sum,k)=>sum+(Number(p.savings.categories[k])||0),0):0}
 function availableBalance(){return Math.max(0,totalBalance()-savingsTotal())}
+
+function dayStartDate(dateKey){const [y,m,d]=String(dateKey).split("-").map(Number);return new Date(y,m-1,d,0,0,0,0)}
+function dayEndDate(dateKey){const d=dayStartDate(dateKey);d.setDate(d.getDate()+1);return d}
+function dateKeyFromParts(y,m,d){return `${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`}
+function transactionsForDay(dateKey){return txs().filter(t=>localDateKey(t.date)===dateKey).sort((a,b)=>new Date(a.date)-new Date(b.date))}
+function accountOpeningForDay(dateKey){
+  const p=profile();
+  if(!p)return {cash:0,bank:0,upi:0};
+  const start=dayStartDate(dateKey).getTime();
+  let cash=Number(p.cash)||0, bank=Number(p.bank)||0;
+  txs().forEach(t=>{
+    const time=new Date(t.date).getTime();
+    if(!Number.isFinite(time) || time<start)return;
+    const amount=Number(t.amount)||0;
+    if(t.kind==="transfer"){
+      if(t.from==="cash"&&t.to==="bank"){cash+=amount;bank-=amount}
+      else if(t.from==="bank"&&t.to==="cash"){bank+=amount;cash-=amount}
+    }else{
+      const signed=(t.kind==="income"?1:-1)*amount;
+      if(t.method==="cash")cash-=signed;else bank-=signed;
+    }
+  });
+  return {cash:Math.max(0,cash),bank:Math.max(0,bank),upi:Math.max(0,bank)};
+}
+function accountClosingForDay(dateKey){
+  const opening=accountOpeningForDay(dateKey), day=transactionsForDay(dateKey);
+  const out={...opening};
+  day.forEach(t=>applyRecord(out,t,1));
+  out.cash=Math.max(0,out.cash);out.bank=Math.max(0,out.bank);out.upi=out.bank;
+  return out;
+}
+function daySummary(dateKey){
+  const day=transactionsForDay(dateKey), opening=accountOpeningForDay(dateKey), closing=accountClosingForDay(dateKey);
+  const summary={dateKey,opening,closing,transactions:day,income:0,expense:0,transfer:0,incomeCount:0,expenseCount:0,transferCount:0,cashIncome:0,cashExpense:0,bankIncome:0,bankExpense:0,upiIncome:0,upiExpense:0,cashTransferIn:0,cashTransferOut:0,bankTransferIn:0,bankTransferOut:0};
+  day.forEach(t=>{
+    const a=Number(t.amount)||0;
+    if(t.kind==="income"){
+      summary.income+=a;summary.incomeCount++;
+      if(t.method==="cash")summary.cashIncome+=a;else {summary.bankIncome+=a;if(t.method==="upi")summary.upiIncome+=a;}
+    }else if(t.kind==="expense"){
+      summary.expense+=a;summary.expenseCount++;
+      if(t.method==="cash")summary.cashExpense+=a;else {summary.bankExpense+=a;if(t.method==="upi")summary.upiExpense+=a;}
+    }else{
+      summary.transfer+=a;summary.transferCount++;
+      if(t.from==="cash")summary.cashTransferOut+=a;if(t.to==="cash")summary.cashTransferIn+=a;
+      if(t.from==="bank")summary.bankTransferOut+=a;if(t.to==="bank")summary.bankTransferIn+=a;
+    }
+  });
+  return summary;
+}
+function monthSummary(year,month){
+  const startKey=dateKeyFromParts(year,month,1);
+  const endDay=new Date(year,month+1,0).getDate();
+  const today=new Date();
+  const isCurrentMonth=year===today.getFullYear()&&month===today.getMonth();
+  const effectiveEndKey=isCurrentMonth?localDateKey(today):dateKeyFromParts(year,month,endDay);
+  const opening=accountOpeningForDay(startKey);
+  const closing=accountClosingForDay(effectiveEndKey);
+  const transactions=txs().filter(t=>{const k=localDateKey(t.date);return k>=startKey&&k<=effectiveEndKey;});
+  const income=transactions.filter(t=>t.kind==="income").reduce((sum,t)=>sum+Number(t.amount||0),0);
+  const expense=transactions.filter(t=>t.kind==="expense").reduce((sum,t)=>sum+Number(t.amount||0),0);
+  const transfer=transactions.filter(t=>t.kind==="transfer").reduce((sum,t)=>sum+Number(t.amount||0),0);
+  return {startKey,effectiveEndKey,opening,closing,transactions,income,expense,transfer,isCurrentMonth};
+}
+function formatDayTitle(dateKey){return dayStartDate(dateKey).toLocaleDateString("en-IN",{weekday:"long",day:"2-digit",month:"long",year:"numeric"})}
+function formatShortTime(value){return new Date(value).toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit",hour12:true})}
+function dayHasActivity(dateKey){return transactionsForDay(dateKey).length>0}
+function dateKeyToDisplay(dateKey){
+  const [y,m,d]=String(dateKey).split("-").map(Number);
+  return `${String(d).padStart(2,"0")}/${String(m).padStart(2,"0")}/${y}`;
+}
+function parseUserDateQuery(value){
+  const m=String(value||"").trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+  if(!m)return null;
+  let day=Number(m[1]), month=Number(m[2]), year=Number(m[3]);
+  if(year<100)year+=2000;
+  if(month<1||month>12||day<1||year<1900||year>2100)return null;
+  const d=new Date(year,month-1,day);
+  if(d.getFullYear()!==year||d.getMonth()!==month-1||d.getDate()!==day)return null;
+  return `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+}
+function isFutureDateKey(dateKey){return dateKey>localDateKey(new Date())}
+
 function showToast(msg,type="primary"){
   const icon=type==="danger"?"bi-exclamation-triangle":"bi-check-circle";
   $("#toastBox").html(`<div class="toast show toast-${esc(type)} border-0 shadow-sm" role="alert"><div class="toast-body"><i class="bi ${icon} me-2"></i>${esc(msg)}</div></div>`);
@@ -290,6 +373,23 @@ function aiAnswer(raw){
   if(!q)return "Ask me something about your finances.";
   const l=q.toLowerCase().replace(/\s+/g," ");
   const p=profile(), list=aiTxList(), total=totalBalance(), saved=savingsTotal(), available=availableBalance();
+
+  // Exact day-wise lookup: accepts DD/MM/YYYY (and DD/MM/YY) and returns
+  // the complete local financial picture for that calendar date.
+  const dateMatch=q.match(/\b(\d{1,2}\/\d{1,2}\/(?:\d{2}|\d{4}))\b/);
+  if(dateMatch){
+    const dateKey=parseUserDateQuery(dateMatch[1]);
+    if(!dateKey)return `I couldn't understand ${dateMatch[1]}. Please use DD/MM/YYYY, for example 24/09/2026.`;
+    if(isFutureDateKey(dateKey))return `24/09/2026-style future dates are not available in TraHis yet. Please enter today or an earlier date.`.replace("24/09/2026-style",dateMatch[1]);
+    const ds=daySummary(dateKey), label=dateKeyToDisplay(dateKey);
+    const txLines=ds.transactions.length?ds.transactions.map((t,i)=>{
+      const sign=t.kind==="income"?"+":t.kind==="expense"?"-":"↔";
+      const method=t.kind==="transfer"?`${t.from} → ${t.to}`:(t.method||"bank").toUpperCase();
+      return `${i+1}. ${formatShortTime(t.date)} • ${sign}${aiFormatNumber(t.amount)} • ${t.note||t.kind} • ${method}`;
+    }).join("\n"):"No transactions recorded on this date.";
+    const upiActivity=ds.upiIncome+ds.upiExpense;
+    return `Daily financial picture — ${label}\n\nOpening balance\nCash: ${aiFormatNumber(ds.opening.cash)}\nBank: ${aiFormatNumber(ds.opening.bank)}\n\nDay activity\nIncome: +${aiFormatNumber(ds.income)} (${ds.incomeCount})\nExpense: -${aiFormatNumber(ds.expense)} (${ds.expenseCount})\nTransfer: ${aiFormatNumber(ds.transfer)} (${ds.transferCount})\nUPI activity: ${aiFormatNumber(upiActivity)}\nUPI expense: -${aiFormatNumber(ds.upiExpense)}\nCash expense: -${aiFormatNumber(ds.cashExpense)}\n\nClosing balance\nCash: ${aiFormatNumber(ds.closing.cash)}\nBank: ${aiFormatNumber(ds.closing.bank)}\n\nTransactions\n${txLines}`;
+  }
 
   if(/\b(hi|hello|hey|kem cho|kem chho|hii|namaste)\b/.test(l)){
     return `Hi ${p?.name||"there"} 👋\nI’m TraHis Assistant. Ask me about your balance, expenses, income, savings or transactions.`;
@@ -481,6 +581,8 @@ function pageFor(route){return ROUTES[route]||ROUTES.dashboard}
 function go(route,extra=""){
   const target=Object.prototype.hasOwnProperty.call(ROUTES,route)?route:"dashboard";
   if(!state.session){window.location.assign(ROUTES.dashboard);return}
+  if(target==="calendar" && currentRoute!=="calendar")sessionStorage.removeItem("trahis_calendar_view");
+  if(target!=="calendar")sessionStorage.removeItem("trahis_calendar_view");
   closeDrawer();
   currentRoute=target;
   const suffix=extra||"";
@@ -525,7 +627,7 @@ function renderAdd(){
   const t=editingId?txs().find(x=>x.id===editingId):null;
   if(editingId&&!t)editingId=null;
   $("#main").html(`<div class="mb-3"><h1 class="page-title">${t?"Edit transaction":"Add transaction"}</h1><div class="page-subtitle">${t?"Update the selected record.":"Income adds money; expense removes it."}</div></div><div class="cardx form-card"><form id="txForm" autocomplete="off"><div class="row g-3"><div class="col-12 col-md-6"><label class="form-label">Type</label><select id="txKind" class="form-select"><option value="income">Income</option><option value="expense">Expense</option></select></div><div class="col-12 col-md-6"><label class="form-label">Payment method</label><select id="txMethod" class="form-select"><option value="cash">Cash</option><option value="bank">Bank</option><option value="upi">UPI (from Bank)</option></select></div><div class="col-12 col-md-6"><label class="form-label">Amount</label><input id="txAmount" type="number" min="0.01" step="0.01" inputmode="decimal" class="form-control" required></div><div class="col-12 col-md-6"><label class="form-label">Date & time</label><input id="txDate" type="datetime-local" class="form-control" required></div><div class="col-12"><label class="form-label">Note / Description</label><input id="txNote" class="form-control" maxlength="120" placeholder="e.g. Salary, grocery, rent" required></div><div class="col-12"><div id="txHelp" class="alertx info-box"></div></div><div class="col-12 d-flex flex-wrap gap-2"><button class="btn btn-primary">${t?"Update":"Save"} transaction</button>${t?'<button type="button" id="cancelEdit" class="btn btn-light">Cancel</button>':""}</div></div></form></div>`);
-  const now=t?new Date(t.date):new Date();$("#txDate").val(new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16));
+  const qDate=new URLSearchParams(location.search).get("date");const now=t?new Date(t.date):(qDate?new Date(`${qDate}T12:00`):new Date());$("#txDate").val(new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16));
   if(t){$("#txKind").val(t.kind);$("#txMethod").val(t.method);$("#txAmount").val(t.amount);$("#txNote").val(t.note)}
   updateTxHelp();$("#txKind,#txMethod").on("change",updateTxHelp);
 }
@@ -578,7 +680,128 @@ function renderSavings(){
   $("#main").html(`<div class="page-head mb-3"><div><h1 class="page-title">Savings</h1><div class="page-subtitle">Keep your savings protected from normal expenses.</div></div><div class="savings-head-icon"><i class="bi bi-piggy-bank-fill"></i></div></div><div class="cardx savings-hero-card mb-3"><div><div class="savings-hero-label"><i class="bi bi-lock-fill"></i> Protected savings</div><div class="savings-hero-amount">${money(st)}</div><div class="savings-hero-note">Normal expenses never reduce this amount.</div></div><div class="savings-hero-right"><div class="savings-available-label">Available for normal spending</div><strong>${money(avail)}</strong></div></div><div class="cardx savings-setup-card mb-3"><div class="savings-section-head"><div><h5>Savings setup</h5><p>Choose the reserve percentage and your monthly spending budget.</p></div><button id="resetSavingsBtn" type="button" class="btn btn-outline-danger savings-reset-btn"><i class="bi bi-arrow-counterclockwise"></i> Reset</button></div><div class="row g-3 align-items-end"><div class="col-12 col-md-4"><label class="form-label">Savings %</label><div class="input-group savings-input"><input id="savePercent" type="number" min="0" max="100" step="1" inputmode="numeric" class="form-control" value="${s.percent}"><span class="input-group-text">%</span></div></div><div class="col-12 col-md-4"><label class="form-label">Monthly expense budget</label><div class="input-group savings-input"><span class="input-group-text">₹</span><input id="monthlyBudget" type="number" min="0" step="0.01" inputmode="decimal" class="form-control" value="${s.monthlyBudget||0}"></div></div><div class="col-12 col-md-4"><button id="saveSetupBtn" class="btn btn-primary w-100 savings-save-btn">Save settings</button></div></div><div class="savings-reserve-box mt-3"><div><div class="small text-muted">Suggested reserve from current total</div><strong id="suggestedSavings">${money(total*(Number(s.percent)||0)/100)}</strong></div><button id="reserveBtn" class="btn btn-soft">Set / Update reserve</button></div><div class="small text-muted savings-reset-note mt-2"><i class="bi bi-info-circle"></i> Reset clears savings percentage, monthly budget and all protected savings categories. Your Cash/Bank balance is not changed.</div></div><div class="section-title">Savings categories</div><div class="row g-3"><div class="col-6 col-md-3"><div class="cardx savings-category-card"><div class="cat-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></div><div class="cat-name">Main Savings</div><strong>${money(c.main)}</strong></div></div><div class="col-6 col-md-3"><div class="cardx savings-category-card"><div class="cat-icon"><i class="bi bi-shield-check" aria-hidden="true"></i></div><div class="cat-name">Emergency</div><strong>${money(c.emergency)}</strong></div></div><div class="col-6 col-md-3"><div class="cardx savings-category-card"><div class="cat-icon"><i class="bi bi-person-check" aria-hidden="true"></i></div><div class="cat-name">Personal</div><strong>${money(c.personal)}</strong></div></div><div class="col-6 col-md-3"><div class="cardx savings-category-card"><div class="cat-icon"><i class="bi bi-coin" aria-hidden="true"></i></div><div class="cat-name">Other Savings</div><strong>${money(c.other)}</strong></div></div></div><div class="row g-3 mt-1"><div class="col-12 col-lg-6"><div class="cardx savings-action-card h-100"><div class="savings-action-head"><div class="savings-action-icon"><i class="bi bi-arrow-left-right"></i></div><div><h6>Move inside savings</h6><p>Rearrange protected money between categories.</p></div></div><form id="saveMoveForm"><div class="row g-3"><div class="col-6"><label class="form-label">From</label><select id="saveFrom" class="form-select">${CATS.map(k=>`<option value="${k}">${CAT_LABEL[k]}</option>`).join("")}</select></div><div class="col-6"><label class="form-label">To</label><select id="saveTo" class="form-select">${CATS.map(k=>`<option value="${k}">${CAT_LABEL[k]}</option>`).join("")}</select></div><div class="col-7"><label class="form-label">Amount</label><div class="input-group savings-input"><span class="input-group-text">₹</span><input id="saveMoveAmount" type="number" min="0.01" step="0.01" inputmode="decimal" class="form-control" required></div></div><div class="col-5 d-flex align-items-end"><button class="btn btn-primary w-100">Move</button></div></div></form></div></div><div class="col-12 col-lg-6"><div class="cardx savings-action-card h-100"><div class="savings-action-head"><div class="savings-action-icon"><i class="bi bi-unlock-fill"></i></div><div><h6>Use savings</h6><p>Release protected money back to your available balance.</p></div></div><form id="saveWithdrawForm"><div class="row g-3"><div class="col-12 col-sm-6"><label class="form-label">Category</label><select id="saveWithdrawFrom" class="form-select">${CATS.map(k=>`<option value="${k}">${CAT_LABEL[k]}</option>`).join("")}</select></div><div class="col-12 col-sm-6"><label class="form-label">Amount</label><div class="input-group savings-input"><span class="input-group-text">₹</span><input id="saveWithdrawAmount" type="number" min="0.01" step="0.01" inputmode="decimal" class="form-control" required></div></div><div class="col-12"><button class="btn btn-primary w-100">Use savings</button></div></div></form></div></div></div><div class="cardx savings-budget-card mt-3"><div><div class="budget-title">This month</div><div class="small text-muted">Expense budget</div></div><div class="text-end"><strong>${budget?money(remaining):"Not set"}</strong><div class="small text-muted">${budget?`${money(monthExp)} spent of ${money(budget)}`:"Set a budget above"}</div></div></div>`);
   $("#savePercent").on("input",function(){const pct=Math.max(0,Math.min(100,Number(this.value)||0));$("#suggestedSavings").text(money(total*pct/100))});
 }
-function renderTutorial(){ /* tutorial.html contains its own static tutorial content */ }
+
+function renderCalendar(){
+  const now=new Date();
+  const q=new URLSearchParams(location.search);
+  const explicitView=sessionStorage.getItem("trahis_calendar_view")==="1";
+  let year=Number(q.get("year"));
+  let month=Number(q.get("month"));
+  if(!explicitView||!Number.isInteger(year)||year<1900||year>2100)year=now.getFullYear();
+  month=explicitView&&Number.isInteger(month)&&month>=0&&month<=11?month:now.getMonth();
+  const viewDate=new Date(year,month,1);
+  const todayKey=localDateKey(now);
+  const currentMonthStart=new Date(now.getFullYear(),now.getMonth(),1);
+  const viewMonthStart=new Date(year,month,1);
+  const isFutureMonth=viewMonthStart>currentMonthStart;
+  const first=viewDate.getDay(), days=new Date(year,month+1,0).getDate(), prevDays=new Date(year,month,0).getDate();
+  let cells="";
+  for(let i=0;i<42;i++){
+    const n=i-first+1;let d=n,y=year,m=month,muted=false;
+    if(n<1){d=prevDays+n;m--;muted=true;if(m<0){m=11;y--;}}
+    else if(n>days){d=n-days;m++;muted=true;if(m>11){m=0;y++;}}
+    const key=dateKeyFromParts(y,m,d), active=key===todayKey, future=key>todayKey, has=dayHasActivity(key);
+    const disabled=future;
+    cells+=`<button type="button" class="calendar-day${muted?" muted":""}${active?" today":""}${has?" has-activity":""}${disabled?" future-disabled":""}" data-date="${key}" ${disabled?"disabled":""} aria-disabled="${disabled}" aria-label="${esc(new Date(y,m,d).toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))}"><span class="calendar-day-number">${d}</span>${active?'<span class="calendar-today-badge">Today</span>':""}${has?'<span class="calendar-day-dot" aria-hidden="true"></span>':""}</button>`;
+  }
+  const summary=monthSummary(year,month);
+  const monthLabel=viewDate.toLocaleDateString("en-IN",{month:"long"});
+  const selectedDateForGlance=(year===now.getFullYear()&&month===now.getMonth())?todayKey:null;
+  const prevMonth=new Date(year,month-1,1),nextMonth=new Date(year,month+1,1);
+  const monthOptions=["January","February","March","April","May","June","July","August","September","October","November","December"].map((name,i)=>`<button type="button" class="calendar-month-option${i===month?" active":""}${year===now.getFullYear()&&i>now.getMonth()?" future-option":""}" data-month-value="${i}" role="option" aria-selected="${i===month}" ${year===now.getFullYear()&&i>now.getMonth()?"disabled":""}>${name}<i class="bi bi-check2"></i></button>`).join("");
+  const quick=summary.transactions.length?`${summary.transactions.length} transaction${summary.transactions.length===1?"":"s"} in ${monthLabel}`:(isFutureMonth?"Future dates are disabled":"No transactions in this month");
+  const canNext=nextMonth<=currentMonthStart;
+  const canPrev=true;
+  $("#main").html(`<div class="page-head"><div><h1 class="page-title">Calendar</h1><div class="page-subtitle">Select any date to see the complete day-wise financial picture.</div></div><div class="calendar-head-actions"><button type="button" class="btn-soft" data-cal-today><i class="bi bi-calendar-check"></i> Today</button></div></div><div class="cardx calendar-card"><div class="calendar-toolbar"><button type="button" class="calendar-nav" data-cal-prev aria-label="Previous month" ${canPrev?"":"disabled"}><i class="bi bi-chevron-left"></i></button><div class="calendar-month-title"><div class="calendar-jump" data-calendar-jump><button type="button" class="calendar-month-display" aria-haspopup="listbox" aria-expanded="false"><span>${esc(monthLabel)}</span><i class="bi bi-chevron-down"></i></button><div class="calendar-month-menu" role="listbox" aria-label="Select month">${monthOptions}</div><button type="button" class="calendar-year-display" aria-label="Edit calendar year">${year}</button><input class="calendar-year-input calendar-year-edit" type="text" inputmode="numeric" maxlength="4" value="${year}" aria-label="Calendar year" autocomplete="off" spellcheck="false"></div><span class="calendar-quick-status">${esc(quick)}</span></div><button type="button" class="calendar-nav" data-cal-next aria-label="Next month" ${canNext?"":"disabled"}><i class="bi bi-chevron-right"></i></button></div><div class="calendar-weekdays">${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<span>${d}</span>`).join("")}</div><div class="calendar-grid">${cells}</div><div class="calendar-legend"><span><i class="calendar-legend-dot"></i> Transaction activity</span><span><i class="calendar-legend-today"></i> <strong>Today</strong></span><span><i class="calendar-legend-disabled"></i> Future date disabled</span></div></div>${!isFutureMonth?`<div class="section-title">${esc(monthLabel)} ${year} at a glance</div><div class="row g-3 calendar-glance"><div class="col-6 col-lg-3"><div class="cardx calendar-stat"><span>Opening cash</span><strong>${money(summary.opening.cash)}</strong></div></div><div class="col-6 col-lg-3"><div class="cardx calendar-stat"><span>Opening UPI</span><strong>${money(summary.opening.upi)}</strong></div></div><div class="col-6 col-lg-3"><div class="cardx calendar-stat income"><span>Month income</span><strong>${money(summary.income)}</strong></div></div><div class="col-6 col-lg-3"><div class="cardx calendar-stat expense"><span>Month expense</span><strong>${money(summary.expense)}</strong></div></div><div class="col-12 col-lg-4"><div class="cardx calendar-stat closing"><span>Month closing balance${summary.isCurrentMonth?" · as of today":""}</span><strong>${money((summary.closing.cash||0)+(summary.closing.bank||0))}</strong><small>Cash ${money(summary.closing.cash)} · Bank / UPI ${money(summary.closing.bank)}</small></div></div></div>`:""}`);
+  function goMonth(target){
+    const y=target.getFullYear(),m=target.getMonth();
+    if(new Date(y,m,1)>currentMonthStart)return;
+    sessionStorage.setItem("trahis_calendar_view","1");
+    window.history.replaceState({},"",`calendar.html?year=${y}&month=${m}`);renderCalendar();
+  }
+  function goToYearMonth(nextYear,nextMonth){
+    const y=Math.max(1900,Math.min(2100,Number(nextYear)||year));
+    const m=Math.max(0,Math.min(11,Number(nextMonth)));
+    if(new Date(y,m,1)>currentMonthStart){showToast("Future months are not available in Calendar.","danger");return;}
+    sessionStorage.setItem("trahis_calendar_view","1");
+    window.history.replaceState({},"",`calendar.html?year=${y}&month=${m}`);renderCalendar();
+  }
+  const monthSelect=$(".calendar-month-display"),monthMenu=$(".calendar-month-menu"),yearDisplay=$(".calendar-year-display"),yearInput=$(".calendar-year-edit");
+  monthSelect.on("click",function(e){e.stopPropagation();const open=monthMenu.hasClass("open");$(".calendar-month-menu.open").removeClass("open");$(".calendar-month-display[aria-expanded='true']").attr("aria-expanded","false");if(!open){monthMenu.addClass("open");monthSelect.attr("aria-expanded","true");monthMenu.find(".active")[0]?.scrollIntoView({block:"nearest"});}});
+  monthMenu.on("click","[data-month-value]:not(:disabled)",function(){goToYearMonth(year,Number($(this).data("month-value")));});
+  function startYearEdit(){yearDisplay.hide();yearInput.show().trigger("focus").select();}
+  function finishYearEdit(commit=true){
+    const v=String(yearInput.val()).replace(/\D/g,"");
+    yearInput.hide();yearDisplay.show();
+    if(commit&&v.length===4&&Number(v)!==year)goToYearMonth(Number(v),month);
+    else if(v.length!==4)yearInput.val(year);
+    else yearInput.val(v);
+  }
+  yearInput.hide();
+  yearDisplay.on("click",function(e){e.stopPropagation();startYearEdit();});
+  yearInput.on("keydown",function(e){if(e.key==="Enter"){e.preventDefault();finishYearEdit(true);}else if(e.key==="Escape"){e.preventDefault();yearInput.val(year);finishYearEdit(false);}});
+  yearInput.on("blur",function(){finishYearEdit(true);});
+  $(document).off("click.calendarMonth").on("click.calendarMonth",function(e){if(!$(e.target).closest("[data-calendar-jump]").length){monthMenu.removeClass("open");monthSelect.attr("aria-expanded","false");if(yearInput.is(":visible"))finishYearEdit(true);}});
+  $("[data-cal-prev]").on("click",()=>goMonth(prevMonth));
+  $("[data-cal-next]").on("click",()=>goMonth(nextMonth));
+  $("[data-cal-today]").on("click",()=>goMonth(new Date()));
+  $(".calendar-day:not(:disabled)").on("click",function(){openDayDetails($(this).data("date"));});
+}
+function openDayDetails(dateKey){
+  const s=daySummary(dateKey), root=document.getElementById("dayDetailsModal")||document.createElement("div");
+  root.id="dayDetailsModal";
+  root.innerHTML=`<div class="day-modal-backdrop" data-day-close></div><section class="day-modal-card" role="dialog" aria-modal="true" aria-labelledby="dayModalTitle"><div class="day-modal-head"><div><span class="day-modal-eyebrow">Daily financial summary</span><h2 id="dayModalTitle">${esc(formatDayTitle(dateKey))}</h2><p>${s.transactions.length?`${s.transactions.length} transaction${s.transactions.length===1?"":"s"} recorded`:`No transactions recorded`}</p></div><button type="button" class="day-modal-close" data-day-close aria-label="Close"><i class="bi bi-x-lg"></i></button></div><div class="day-modal-grid"><div class="day-summary-card"><span><i class="bi bi-cash-stack"></i> Opening cash</span><strong>${money(s.opening.cash)}</strong></div><div class="day-summary-card"><span><i class="bi bi-bank"></i> Opening bank</span><strong>${money(s.opening.bank)}</strong></div><div class="day-summary-card"><span><i class="bi bi-phone"></i> Opening UPI</span><strong>${money(s.opening.upi)}</strong></div><div class="day-summary-card"><span><i class="bi bi-cash-stack"></i> Closing cash</span><strong>${money(s.closing.cash)}</strong></div><div class="day-summary-card"><span><i class="bi bi-bank"></i> Closing bank</span><strong>${money(s.closing.bank)}</strong></div><div class="day-summary-card"><span><i class="bi bi-phone"></i> Closing UPI</span><strong>${money(s.closing.upi)}</strong></div></div><div class="day-flow-grid"><div class="day-flow income"><span>Income</span><strong>+${money(s.income)}</strong><small>${s.incomeCount} record${s.incomeCount===1?"":"s"}</small></div><div class="day-flow expense"><span>Expense</span><strong>-${money(s.expense)}</strong><small>${s.expenseCount} record${s.expenseCount===1?"":"s"}</small></div><div class="day-flow transfer"><span>Transfer</span><strong>${money(s.transfer)}</strong><small>${s.transferCount} record${s.transferCount===1?"":"s"}</small></div></div><div class="day-channel-grid"><div><strong>Cash</strong><span>Income ${money(s.cashIncome)}</span><span>Expense ${money(s.cashExpense)}</span><span>Transfer in ${money(s.cashTransferIn)}</span><span>Transfer out ${money(s.cashTransferOut)}</span></div><div><strong>Bank / UPI</strong><span>Income ${money(s.bankIncome)}</span><span>Expense ${money(s.bankExpense)}</span><span>UPI income ${money(s.upiIncome)}</span><span>UPI expense ${money(s.upiExpense)}</span></div></div><div class="day-transactions"><div class="day-section-title"><strong>Transaction details</strong><span>${s.transactions.length} total</span></div>${s.transactions.length?s.transactions.map(t=>`<div class="day-tx-row"><div class="day-tx-icon ${t.kind==="income"?"income":t.kind==="expense"?"expense":"transfer"}"><i class="bi ${t.kind==="income"?"bi-arrow-down-left":t.kind==="expense"?"bi-arrow-up-right":"bi-arrow-left-right"}"></i></div><div class="day-tx-main"><strong>${esc(t.note||t.kind)}</strong><span>${esc(t.kind)} • ${t.kind==="transfer"?`${esc(t.from)} → ${esc(t.to)}`:(t.method||"bank").toUpperCase()} • ${formatShortTime(t.date)}</span></div><strong class="day-tx-amount ${t.kind==="income"?"income":t.kind==="expense"?"expense":"transfer"}">${t.kind==="income"?"+":t.kind==="expense"?"-":"↔"}${money(t.amount)}</strong></div>`).join(""):`<div class="day-empty"><i class="bi bi-calendar2-x"></i><span>No income, expense or transfer was recorded on this date.</span></div>`}</div><div class="day-modal-foot"><button type="button" class="btn-soft" data-day-close>Close</button><a class="btn btn-primary" href="add.html?date=${encodeURIComponent(dateKey)}"><i class="bi bi-plus-lg"></i> Add transaction</a></div></section>`;
+  if(!root.parentElement)document.body.appendChild(root);
+  root.classList.add("open");document.body.classList.add("dialog-open");
+  let key;
+  const close=()=>{document.removeEventListener("keydown",key);root.classList.remove("open");document.body.classList.remove("dialog-open");setTimeout(()=>{if(!root.classList.contains("open"))root.remove()},180)};
+  root.querySelectorAll("[data-day-close]").forEach(el=>el.addEventListener("click",close));
+  key=e=>{if(e.key==="Escape"){e.preventDefault();close()}};document.addEventListener("keydown",key);
+  root.querySelector(".day-modal-close")?.focus();
+}
+
+function renderTutorial(){
+  const done=localStorage.getItem("trahis_tutorial_complete_v1")==="1";
+  const topics=[
+    {id:"start",icon:"bi-stars",title:"Getting started",short:"Learn the core flow",body:"Set up your profile, understand your balances, and learn where each module fits.",route:"profile"},
+    {id:"dashboard",icon:"bi-grid-1x2",title:"Dashboard",short:"Read your finances quickly",body:"See balances, income, expenses, savings, recent activity, and charts from one place.",route:"dashboard"},
+    {id:"transactions",icon:"bi-plus-circle",title:"Transactions",short:"Add income & expenses",body:"Record income or expenses with date, time, note, and payment method. Edit or delete records from History.",route:"add"},
+    {id:"history",icon:"bi-clock-history",title:"History & filters",short:"Find any transaction",body:"Search, filter by type or method, use date ranges, and review totals without changing your stored data.",route:"history"},
+    {id:"calendar",icon:"bi-calendar3",title:"Calendar",short:"Explore a day in detail",body:"Open a date to see opening balances, day activity, closing balances, and every transaction for that day.",route:"calendar"},
+    {id:"savings",icon:"bi-piggy-bank",title:"Savings",short:"Protect money intentionally",body:"Set a savings reserve, organize protected categories, move savings between categories, or use savings when needed.",route:"savings"},
+    {id:"transfer",icon:"bi-arrow-left-right",title:"Transfers",short:"Move Cash ↔ Bank",body:"Transfers change account balances without being counted as income or expense. Always choose different source and destination accounts.",route:"transfer"},
+    {id:"backup",icon:"bi-cloud-arrow-down",title:"Backup & Restore",short:"Keep a local copy",body:"Export your local TraHis data as JSON and restore it later. Backups stay under your control and are not uploaded by the app.",route:"backup"},
+    {id:"settings",icon:"bi-sliders",title:"Settings & themes",short:"Personalize the interface",body:"Change light/dark mode, theme color, density, and visual style. Five visual styles are available.",route:"settings"},
+    {id:"ai",icon:"bi-stars",title:"AI Assistant",short:"Ask about your data",body:"Use local, rule-based questions such as balance, savings, recent activity, or an exact date like 24/09/2026.",route:"dashboard"}
+  ];
+  const step=topics.map((t,i)=>`<button type="button" class="tour-menu-btn${i===0?" active":""}" data-tour-index="${i}"><span class="tour-dot"><i class="bi ${t.icon}"></i></span><span><strong>${esc(t.title)}</strong><small>${esc(t.short)}</small></span></button>`).join("");
+  const panels=topics.map((t,i)=>`<section class="tour-panel${i===0?" active":""}" data-tour-panel="${i}" aria-hidden="${i===0?"false":"true"}">
+    <div class="mock-window"><div class="mock-top"><span class="mock-dot"></span><span class="mock-dot"></span><span class="mock-dot"></span><strong class="ms-2">TraHis • ${esc(t.title)}</strong></div><div class="mock-body">
+      <div class="mock-kpis"><div class="mock-kpi"><div class="small text-muted">Focus</div><strong>${esc(t.title)}</strong></div><div class="mock-kpi"><div class="small text-muted">Goal</div><strong>${esc(t.short)}</strong></div><div class="mock-kpi"><div class="small text-muted">Step</div><strong>${i+1} / ${topics.length}</strong></div></div>
+      <div class="mock-line w70"></div><div class="mock-line w45"></div><div class="mock-list"><div class="mock-row"><span>What it does</span><strong>${esc(t.title)}</strong></div><div class="mock-row"><span>Why it matters</span><strong>Keep your data organized</strong></div></div>
+    </div></div>
+    <div class="tour-copy"><h3>${esc(t.title)}</h3><p>${esc(t.body)}</p></div>
+    <div class="tour-actions"><button type="button" class="btn btn-light tour-prev" ${i===0?"disabled":""}><i class="bi bi-arrow-left"></i> Previous</button><button type="button" class="btn btn-primary tour-open-module" data-route="${t.route}">Open ${esc(t.title.split(" ")[0])}</button><button type="button" class="btn btn-primary tour-next" ${i===topics.length-1?"disabled":""}>Next <i class="bi bi-arrow-right"></i></button></div>
+  </section>`).join("");
+  const faq=[
+    ["Where is my data stored?","TraHis is designed for local use. Your working data is stored in the browser's local storage on this device."],
+    ["Does changing a theme change my financial data?","No. Themes are presentation preferences only and do not change transaction, balance, or savings records."],
+    ["How does Calendar work?","Calendar opens on the current month. Past dates can be opened for day-wise financial details; future dates are disabled."],
+    ["Can I recover deleted data?","Deleted transactions are not automatically recoverable. Use Backup & Restore regularly if you need a recovery point."],
+    ["What can the AI Assistant answer?","It can answer supported questions from your local TraHis data, including balances, savings, recent records, and exact-date summaries."],
+    ["How should I keep backups safe?","Keep exported JSON backups in a trusted private location. Anyone who obtains a backup file may be able to inspect its contents."]
+  ];
+  const faqHtml=faq.map((x,i)=>`<div class="faq-item${i===0?" open":""}"><button type="button" class="faq-q" aria-expanded="${i===0}"><span>${esc(x[0])}</span><i class="bi bi-chevron-down"></i></button><div class="faq-a">${esc(x[1])}</div></div>`).join("");
+  const topicsGrid=topics.slice(0,8).map(t=>`<div class="topic-card"><div class="d-flex align-items-center gap-2"><span class="tour-dot"><i class="bi ${t.icon}"></i></span><strong>${esc(t.title)}</strong></div><div class="small text-muted mt-2">${esc(t.body)}</div><button type="button" class="topic-open" data-route="${t.route}">Open module <i class="bi bi-arrow-up-right"></i></button></div>`).join("");
+  $("#main").html(`<div class="tutorial-page">
+    <section class="tutorial-hero"><div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center"><div><span class="badge rounded-pill text-bg-light mb-2"><i class="bi bi-stars"></i> Interactive guide</span><h1 class="page-title mb-2">Learn TraHis in a few minutes</h1><p class="page-subtitle mb-0">A guided tour of your dashboard, transactions, savings, calendar, backup, themes, and local AI assistant.</p></div><button type="button" id="tutorialComplete" class="btn ${done?"btn-success":"btn-primary"}"><i class="bi ${done?"bi-check-circle":"bi-check2-circle"}"></i> ${done?"Tutorial completed":"Mark tutorial complete"}</button></div><div class="tour-progress mt-3"><span id="tourProgress" style="width:${Math.round(100/topics.length)}%"></span></div><div class="small text-muted mt-2" id="tourStepText">Step 1 of ${topics.length}</div></section>
+    <section class="tour-layout mt-3"><aside class="tour-menu" aria-label="Tutorial topics">${step}</aside><div class="tour-content">${panels}</div></section>
+    <section class="cardx mt-3"><div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="h5 mb-1">Quick module guide</h2><p class="small text-muted mb-0">Jump directly to a module when you are ready to try it.</p></div><span class="badge rounded-pill bg-light text-dark">8 modules</span></div><div class="topic-grid">${topicsGrid}</div></section>
+    <section class="cardx mt-3"><h2 class="h5 mb-3">Frequently asked questions</h2>${faqHtml}</section>
+    <section class="cardx mt-3 mb-4"><div class="d-flex gap-3 align-items-start"><div class="tour-dot"><i class="bi bi-shield-check"></i></div><div><h2 class="h6 mb-1">Local-first reminder</h2><p class="small text-muted mb-0">TraHis is intended for local personal use. Keep your browser/device protected and create backups before major changes.</p></div></div></section>
+  </div>`);
+}
+
 function renderProfile(){
   const p=profile(),u=user();
   $("#main").html(`<div class="mb-3"><h1 class="page-title">Profile</h1><div class="page-subtitle">Account details and opening balances.</div></div><div class="cardx form-card"><form id="profileForm" autocomplete="off"><div class="row g-3"><div class="col-12 col-md-6"><label class="form-label">Full name</label><input id="pName" class="form-control" maxlength="80" value="${esc(p.name)}" required></div><div class="col-12 col-md-6"><label class="form-label">Username</label><input class="form-control" value="${esc(u.username)}" disabled></div><div class="col-12"><hr><h6 class="fw-bold mb-1">Opening balances</h6><div class="small text-muted">Use these only for money you already had before starting TraHis.</div></div><div class="col-12 col-md-4"><label class="form-label">Cash</label><input id="pCash" type="number" min="0" step="0.01" inputmode="decimal" class="form-control" value="${p.cash}"></div><div class="col-12 col-md-4"><label class="form-label">Bank</label><input id="pBank" type="number" min="0" step="0.01" inputmode="decimal" class="form-control" value="${p.bank}"></div><div class="col-12 col-md-4"><label class="form-label">UPI</label><input class="form-control" value="${p.bank}" disabled><div class="small text-muted mt-1">Linked to Bank</div></div><div class="col-12"><button class="btn btn-primary">Save profile</button></div></div></form></div><div class="cardx form-card mt-3"><h6 class="fw-bold">Change password</h6><form id="passForm" class="row g-3" autocomplete="off"><div class="col-12 col-md-6"><input id="oldPass" type="password" class="form-control" placeholder="Current password" autocomplete="current-password" required></div><div class="col-12 col-md-6"><input id="newPass" type="password" class="form-control" placeholder="New password" minlength="4" autocomplete="new-password" required></div><div class="col-12"><button class="btn btn-soft">Change password</button></div></form></div>`);
@@ -822,8 +1045,6 @@ $(document).on("click","[data-visual-style]",function(){
   applyPreferences(p.preferences);
   $("[data-visual-style]").removeClass("active");
   $(`[data-visual-style="${style}"]`).addClass("active");
-  const labels={classic:"Classic",glass:"Glassmorphism",neumorphism:"Neumorphism",aurora:"Aurora","liquid-glass":"Liquid Glass"};
-  showToast(`${labels[style]} theme enabled`,"success");
 });
 $(document).on("submit","#profileForm",function(e){e.preventDefault();const p=profile(),u=user(),old={name:p.name,cash:p.cash,bank:p.bank};const name=$("#pName").val().trim(),cash=Number($("#pCash").val()),bank=Number($("#pBank").val());if(!name)return showToast("Name is required.","danger");if(!Number.isFinite(cash)||cash<0||!Number.isFinite(bank)||bank<0)return showToast("Opening balances must be zero or more.","danger");p.name=name;p.cash=cash;p.bank=bank;p.upi=bank;u.name=name;if(savingsTotal()>totalBalance()+0.00001){p.name=old.name;p.cash=old.cash;p.bank=old.bank;p.upi=old.bank;u.name=old.name;return showToast("Opening balance cannot be lower than protected savings.","danger")}save();showToast("Profile saved");shell();renderProfile()});
 $(document).on("submit","#passForm",function(e){e.preventDefault();const u=user(),old=$("#oldPass").val(),next=$("#newPass").val();if(old!==u.password)return showToast("Current password is incorrect.","danger");if(next.length<4)return showToast("New password must be at least 4 characters.","danger");if(next===old)return showToast("New password must be different.","danger");u.password=next;save();$("#oldPass,#newPass").val("");showToast("Password changed")});
@@ -883,6 +1104,40 @@ $("#themeToggle").on("click",toggleTheme);
 $("#closeDrawer,#drawerOverlay").on("click",closeDrawer);
 $("#logoutBtn").on("click",logout);
 $(document).on("keydown",e=>{if(e.key==="Escape")closeDrawer()});
+$(document).on("click","[data-tour-index]",function(){
+  const idx=Math.max(0,Math.min($("[data-tour-index]").length-1,Number($(this).data("tour-index"))||0));
+  $("[data-tour-index]").removeClass("active").attr("aria-current","false");
+  $(this).addClass("active").attr("aria-current","step");
+  $("[data-tour-panel]").removeClass("active").attr("aria-hidden","true");
+  $(`[data-tour-panel="${idx}"]`).addClass("active").attr("aria-hidden","false");
+  const total=$("[data-tour-index]").length;
+  $("#tourProgress").css("width",`${Math.round(((idx+1)/total)*100)}%`);
+  $("#tourStepText").text(`Step ${idx+1} of ${total}`);
+  const panel=$(`[data-tour-panel="${idx}"]`);
+  panel.find(".tour-prev").prop("disabled",idx===0);
+  panel.find(".tour-next").prop("disabled",idx===total-1);
+});
+$(document).on("click",".tour-next,.tour-prev",function(){
+  const active=$("[data-tour-index].active").first();
+  const total=$("[data-tour-index]").length;
+  let idx=Number(active.data("tour-index"))||0;
+  idx += $(this).hasClass("tour-next") ? 1 : -1;
+  if(idx>=0&&idx<total)$(`[data-tour-index="${idx}"]`).trigger("click");
+});
+$(document).on("click",".tour-open-module,.topic-open",function(){
+  const route=String($(this).data("route")||"");
+  if(route)go(route);
+});
+$(document).on("click",".faq-q",function(){
+  const item=$(this).closest(".faq-item"),open=!item.hasClass("open");
+  item.toggleClass("open",open);$(this).attr("aria-expanded",String(open));
+});
+$(document).on("click","#tutorialComplete",function(){
+  const done=localStorage.getItem("trahis_tutorial_complete_v1")==="1";
+  if(done){localStorage.removeItem("trahis_tutorial_complete_v1");$(this).removeClass("btn-success").addClass("btn-primary").html('<i class="bi bi-check2-circle"></i> Mark tutorial complete');showToast("Tutorial marked as incomplete.");}
+  else{localStorage.setItem("trahis_tutorial_complete_v1","1");$(this).removeClass("btn-primary").addClass("btn-success").html('<i class="bi bi-check-circle"></i> Tutorial completed');showToast("Tutorial marked as complete.","success");}
+});
+
 $(document).on("click",".chart-range",function(){chartRange=$(this).data("range")||"weekly";$(".chart-range").removeClass("active");$(this).addClass("active");const title=chartRange==="daily"?"Daily income & expense activity":chartRange==="monthly"?"Monthly income & expense activity":"Weekly income & expense activity";$("#chartTitle").text(title);drawChart($("#miniChart")[0],txs(),chartRange)});
 $(window).on("resize",()=>{if(currentRoute==="dashboard")drawChart($("#miniChart")[0],txs(),chartRange)});
 
@@ -899,5 +1154,5 @@ else if(rememberedSession){
   localStorage.removeItem(REMEMBER_SESSION_KEY);
   localStorage.removeItem(REMEMBER_KEY);
 }
-if(state.session&&user()&&user().approved){shell();const map={dashboard:renderDashboard,add:renderAdd,transfer:renderTransfer,history:renderHistory,profile:renderProfile,savings:renderSavings,tutorial:renderTutorial,settings:renderSettings,backup:renderBackup,admin:renderAdmin};if(currentRoute==="admin"&&user().role!=="admin"){window.location.href="index.html"}else{(map[currentRoute]||renderDashboard)()}}else{state.session=null;sessionStorage.removeItem(SESSION_KEY);applyPreferences(defaultPreferences());if(currentRoute!=="dashboard"){window.location.href="index.html"}else renderAuth()}
+if(state.session&&user()&&user().approved){shell();const map={dashboard:renderDashboard,add:renderAdd,transfer:renderTransfer,history:renderHistory,calendar:renderCalendar,profile:renderProfile,savings:renderSavings,tutorial:renderTutorial,settings:renderSettings,backup:renderBackup,admin:renderAdmin};if(currentRoute==="admin"&&user().role!=="admin"){window.location.href="index.html"}else{(map[currentRoute]||renderDashboard)()}}else{state.session=null;sessionStorage.removeItem(SESSION_KEY);applyPreferences(defaultPreferences());if(currentRoute!=="dashboard"){window.location.href="index.html"}else renderAuth()}
 })();

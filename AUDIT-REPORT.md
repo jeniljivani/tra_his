@@ -1,28 +1,31 @@
-# TraHis v31 — Custom Controls & Shared Components QA
+# TraHis v38 — Tutorial Module QA Report
 
 ## Scope
-- Shared header, drawer/sidebar and bottom navigation moved to `js/components.js`.
-- Native browser `<select>` and date/datetime controls remain as data/validation sources but are visually replaced by reusable TraHis custom controls.
-- Custom date picker supports calendar navigation, Today, Clear, Done and time selection for datetime-local fields.
-- Controls inherit all five visual styles and light/dark mode.
-- Existing app business logic continues to read the original form field values.
+v38 is based on the TraHis v37 baseline. This release fixes the blank Tutorial module and adds an interactive, local-first tutorial experience without changing the financial data model.
 
-## Static QA
-- All application HTML pages use the shared component mount: PASS
-- Duplicate shell markup in pages: PASS (0)
-- Missing local HTML/CSS/JS/assets references: PASS (0)
-- Duplicate IDs in page source: PASS (0)
-- `js/app.js` syntax: PASS
-- `js/components.js` syntax: PASS
-- `sw.js` syntax: PASS
-- `manifest.json` parse: PASS
-- Service worker cache version: v31
+## Tutorial functionality
+- Interactive 10-topic guided tour
+- Previous / Next navigation with progress indicator
+- Direct links to relevant TraHis modules
+- Quick module guide
+- FAQ accordion
+- Tutorial completion state stored locally
+- Responsive layout for desktop, tablet and mobile
+- Existing theme system preserved (Classic, Glassmorphism, Neumorphism, Aurora, Liquid Glass)
+- Light/dark mode and theme colors preserved
 
-## Browser-control design
-- Native select popup is not used by the visible UI.
-- Native date/datetime picker is not used by the visible UI.
-- Custom controls are keyboard-focusable and theme-aware.
-- Existing source fields stay available for form validation and application logic.
+## Validation
+- app.js syntax: PASS
+- components.js syntax: PASS
+- sw.js syntax: PASS
+- Manifest JSON: PASS
+- Missing local HTML references: 0
+- Native alert/confirm/prompt calls: 0
+- Service-worker cache: v38
+- Tutorial route mapping: PASS
+- Tutorial renderer: implemented
+- Tutorial interaction handlers: implemented
+- Existing data/storage model: unchanged
 
-## Validation limitation
-Physical device/browser matrix testing cannot be claimed from this environment because browser navigation to local/loopback project URLs is administrator-blocked. The implementation was statically validated and the reusable control architecture was reviewed for mobile and desktop behavior.
+## Runtime limitation
+This environment does not provide a reliable physical-device/browser matrix, so this report does not claim testing on every Android/iOS/browser combination.
