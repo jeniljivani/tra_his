@@ -1,17 +1,28 @@
-# TraHis v26 — UI/Interaction Hardening Audit
+# TraHis v31 — Custom Controls & Shared Components QA
 
-## Changes
-- Replaced all native browser confirmation prompts with one reusable TraHis custom action dialog.
-- Dialog content, icon, title and action labels are dynamic per operation while the UI component remains identical.
-- Added keyboard Escape handling, focus trapping, backdrop cancellation and ARIA alertdialog semantics.
-- Settings drawer icon changed from filled gear to outline `bi-gear` to match the navigation icon style.
-- Removed two unsupported bundled Bootstrap Icons (`trash3` and `heart-pulse-fill`) and replaced them with verified bundled outline icons.
-- Service worker cache bumped to v26.
+## Scope
+- Shared header, drawer/sidebar and bottom navigation moved to `js/components.js`.
+- Native browser `<select>` and date/datetime controls remain as data/validation sources but are visually replaced by reusable TraHis custom controls.
+- Custom date picker supports calendar navigation, Today, Clear, Done and time selection for datetime-local fields.
+- Controls inherit all five visual styles and light/dark mode.
+- Existing app business logic continues to read the original form field values.
 
-## Validation
-- app.js syntax: PASS
-- sw.js syntax: PASS
-- native alert/confirm/prompt calls: 0
-- unsupported Bootstrap Icons: 0
-- settings icon reference: PASS
-- custom dialog CSS/JS presence: PASS
+## Static QA
+- All application HTML pages use the shared component mount: PASS
+- Duplicate shell markup in pages: PASS (0)
+- Missing local HTML/CSS/JS/assets references: PASS (0)
+- Duplicate IDs in page source: PASS (0)
+- `js/app.js` syntax: PASS
+- `js/components.js` syntax: PASS
+- `sw.js` syntax: PASS
+- `manifest.json` parse: PASS
+- Service worker cache version: v31
+
+## Browser-control design
+- Native select popup is not used by the visible UI.
+- Native date/datetime picker is not used by the visible UI.
+- Custom controls are keyboard-focusable and theme-aware.
+- Existing source fields stay available for form validation and application logic.
+
+## Validation limitation
+Physical device/browser matrix testing cannot be claimed from this environment because browser navigation to local/loopback project URLs is administrator-blocked. The implementation was statically validated and the reusable control architecture was reviewed for mobile and desktop behavior.

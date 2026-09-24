@@ -1,10 +1,10 @@
 /* TraHis - offline local PWA
-   v26: settings + glassmorphism + custom dialogs
+   v31: shared components + custom controls + navigation-safe multi-theme stability
 */
 (function(){
 "use strict";
 
-const APP_VERSION = "v26";
+const APP_VERSION = "v31";
 const MASTER = { username:"tra_his", password:"tra_his@2503", name:"Master Admin" };
 const DB_KEY = "trahis_state_v5";
 const LEGACY_DB_KEY = "trahis_state_v4";
@@ -23,7 +23,13 @@ const THEME_COLORS = {
   orange:{label:"Orange",primary:"#ea580c",primary2:"#f59e0b",soft:"#fff7ed"}
 };
 let state = loadState();
-let currentRoute = document.body.dataset.page || "dashboard";
+const ROUTES = {dashboard:"index.html",add:"add.html",transfer:"transfer.html",history:"history.html",profile:"profile.html",savings:"savings.html",tutorial:"tutorial.html",settings:"settings.html",backup:"backup.html",admin:"admin.html"};
+function routeFromLocation(){
+  const file=(location.pathname.split("/").pop()||"index.html").toLowerCase();
+  const found=Object.keys(ROUTES).find(k=>ROUTES[k].toLowerCase()===file);
+  return found || (document.body.dataset.page && Object.prototype.hasOwnProperty.call(ROUTES,document.body.dataset.page)?document.body.dataset.page:"dashboard");
+}
+let currentRoute = routeFromLocation();
 let editingId = null;
 let historyPage = 1;
 const HISTORY_PER_PAGE = 10;
@@ -38,7 +44,7 @@ function normalizePreferences(pref){
     theme:p.theme==="dark"?"dark":"light",
     themeColor:THEME_COLORS[p.themeColor]?p.themeColor:"indigo",
     density:p.density==="compact"?"compact":"comfortable",
-    visualStyle:p.visualStyle==="glass"?"glass":"classic"
+    visualStyle:["classic","glass","neumorphism","aurora","liquid-glass"].includes(p.visualStyle)?p.visualStyle:"classic"
   };
 }
 function themedLogoSvg(){
@@ -60,6 +66,9 @@ function applyPreferences(pref){
   root.dataset.visualStyle=p.visualStyle;
   document.body.classList.toggle("density-compact",p.density==="compact");
   document.body.classList.toggle("theme-glass",p.visualStyle==="glass");
+  document.body.classList.toggle("theme-neumorphism",p.visualStyle==="neumorphism");
+  document.body.classList.toggle("theme-aurora",p.visualStyle==="aurora");
+  document.body.classList.toggle("theme-liquid-glass",p.visualStyle==="liquid-glass");
   document.body.classList.toggle("theme-dark",p.theme==="dark");
   const c=THEME_COLORS[p.themeColor]||THEME_COLORS.indigo;
   root.style.setProperty("--primary",c.primary);
@@ -468,8 +477,29 @@ function updateNav(){
   $("#bottomNav a").removeClass("active");
   $(`#bottomNav a[href="${pageFor(currentRoute)}"]`).addClass("active");
 }
-function pageFor(route){return {dashboard:"index.html",add:"add.html",transfer:"transfer.html",history:"history.html",profile:"profile.html",savings:"savings.html",tutorial:"tutorial.html",settings:"settings.html",backup:"backup.html",admin:"admin.html"}[route]||"index.html"}
-function go(route,extra=""){if(!state.session){window.location.href="index.html";return}closeDrawer();window.location.href=pageFor(route)+(extra||"")}
+function pageFor(route){return ROUTES[route]||ROUTES.dashboard}
+function go(route,extra=""){
+  const target=Object.prototype.hasOwnProperty.call(ROUTES,route)?route:"dashboard";
+  if(!state.session){window.location.assign(ROUTES.dashboard);return}
+  closeDrawer();
+  currentRoute=target;
+  const suffix=extra||"";
+  window.location.assign(ROUTES[target]+suffix);
+}
+function bindInternalNavigation(){
+  $(document).on("click","a[href]",function(e){
+    const raw=this.getAttribute("href")||"";
+    if(!raw || raw.startsWith("#") || /^(https?:|mailto:|tel:|javascript:)/i.test(raw)) return;
+    let url;
+    try{url=new URL(raw,window.location.href)}catch(_){return}
+    if(url.origin!==window.location.origin)return;
+    const file=url.pathname.split("/").pop().toLowerCase();
+    const route=Object.keys(ROUTES).find(k=>ROUTES[k].toLowerCase()===file);
+    if(!route)return;
+    e.preventDefault();
+    go(route,(url.search||"")+(url.hash||""));
+  });
+}
 function renderDashboard(){
   const p=profile(),list=txs();
   const totalInc=list.filter(t=>t.kind==="income").reduce((a,t)=>a+t.amount,0),totalExp=list.filter(t=>t.kind==="expense").reduce((a,t)=>a+t.amount,0);
@@ -545,7 +575,7 @@ function renderHistoryList(){
 }
 function renderSavings(){
   const p=profile(),s=p.savings,total=totalBalance(),st=savingsTotal(),avail=availableBalance(),c=s.categories,month=localMonthKey(new Date()),monthExp=txs().filter(t=>t.kind==="expense"&&localMonthKey(t.date)===month).reduce((a,t)=>a+t.amount,0),budget=Number(s.monthlyBudget||0),remaining=budget?Math.max(0,budget-monthExp):0;
-  $("#main").html(`<div class="page-head mb-3"><div><h1 class="page-title">Savings</h1><div class="page-subtitle">Keep your savings protected from normal expenses.</div></div><div class="savings-head-icon"><i class="bi bi-piggy-bank-fill"></i></div></div><div class="cardx savings-hero-card mb-3"><div><div class="savings-hero-label"><i class="bi bi-lock-fill"></i> Protected savings</div><div class="savings-hero-amount">${money(st)}</div><div class="savings-hero-note">Normal expenses never reduce this amount.</div></div><div class="savings-hero-right"><div class="savings-available-label">Available for normal spending</div><strong>${money(avail)}</strong></div></div><div class="cardx savings-setup-card mb-3"><div class="savings-section-head"><div><h5>Savings setup</h5><p>Choose the reserve percentage and your monthly spending budget.</p></div><button id="resetSavingsBtn" type="button" class="btn btn-outline-danger savings-reset-btn"><i class="bi bi-arrow-counterclockwise"></i> Reset</button></div><div class="row g-3 align-items-end"><div class="col-12 col-md-4"><label class="form-label">Savings %</label><div class="input-group savings-input"><input id="savePercent" type="number" min="0" max="100" step="1" inputmode="numeric" class="form-control" value="${s.percent}"><span class="input-group-text">%</span></div></div><div class="col-12 col-md-4"><label class="form-label">Monthly expense budget</label><div class="input-group savings-input"><span class="input-group-text">₹</span><input id="monthlyBudget" type="number" min="0" step="0.01" inputmode="decimal" class="form-control" value="${s.monthlyBudget||0}"></div></div><div class="col-12 col-md-4"><button id="saveSetupBtn" class="btn btn-primary w-100 savings-save-btn">Save settings</button></div></div><div class="savings-reserve-box mt-3"><div><div class="small text-muted">Suggested reserve from current total</div><strong id="suggestedSavings">${money(total*(Number(s.percent)||0)/100)}</strong></div><button id="reserveBtn" class="btn btn-soft">Set / Update reserve</button></div><div class="small text-muted savings-reset-note mt-2"><i class="bi bi-info-circle"></i> Reset clears savings percentage, monthly budget and all protected savings categories. Your Cash/Bank balance is not changed.</div></div><div class="section-title">Savings categories</div><div class="row g-3"><div class="col-6 col-md-3"><div class="cardx savings-category-card"><div class="cat-icon">🏦</div><div class="cat-name">Main Savings</div><strong>${money(c.main)}</strong></div></div><div class="col-6 col-md-3"><div class="cardx savings-category-card"><div class="cat-icon">🚨</div><div class="cat-name">Emergency</div><strong>${money(c.emergency)}</strong></div></div><div class="col-6 col-md-3"><div class="cardx savings-category-card"><div class="cat-icon">🎯</div><div class="cat-name">Personal</div><strong>${money(c.personal)}</strong></div></div><div class="col-6 col-md-3"><div class="cardx savings-category-card"><div class="cat-icon">💰</div><div class="cat-name">Other Savings</div><strong>${money(c.other)}</strong></div></div></div><div class="row g-3 mt-1"><div class="col-12 col-lg-6"><div class="cardx savings-action-card h-100"><div class="savings-action-head"><div class="savings-action-icon"><i class="bi bi-arrow-left-right"></i></div><div><h6>Move inside savings</h6><p>Rearrange protected money between categories.</p></div></div><form id="saveMoveForm"><div class="row g-3"><div class="col-6"><label class="form-label">From</label><select id="saveFrom" class="form-select">${CATS.map(k=>`<option value="${k}">${CAT_LABEL[k]}</option>`).join("")}</select></div><div class="col-6"><label class="form-label">To</label><select id="saveTo" class="form-select">${CATS.map(k=>`<option value="${k}">${CAT_LABEL[k]}</option>`).join("")}</select></div><div class="col-7"><label class="form-label">Amount</label><div class="input-group savings-input"><span class="input-group-text">₹</span><input id="saveMoveAmount" type="number" min="0.01" step="0.01" inputmode="decimal" class="form-control" required></div></div><div class="col-5 d-flex align-items-end"><button class="btn btn-primary w-100">Move</button></div></div></form></div></div><div class="col-12 col-lg-6"><div class="cardx savings-action-card h-100"><div class="savings-action-head"><div class="savings-action-icon"><i class="bi bi-unlock-fill"></i></div><div><h6>Use savings</h6><p>Release protected money back to your available balance.</p></div></div><form id="saveWithdrawForm"><div class="row g-3"><div class="col-12 col-sm-6"><label class="form-label">Category</label><select id="saveWithdrawFrom" class="form-select">${CATS.map(k=>`<option value="${k}">${CAT_LABEL[k]}</option>`).join("")}</select></div><div class="col-12 col-sm-6"><label class="form-label">Amount</label><div class="input-group savings-input"><span class="input-group-text">₹</span><input id="saveWithdrawAmount" type="number" min="0.01" step="0.01" inputmode="decimal" class="form-control" required></div></div><div class="col-12"><button class="btn btn-primary w-100">Use savings</button></div></div></form></div></div></div><div class="cardx savings-budget-card mt-3"><div><div class="budget-title">This month</div><div class="small text-muted">Expense budget</div></div><div class="text-end"><strong>${budget?money(remaining):"Not set"}</strong><div class="small text-muted">${budget?`${money(monthExp)} spent of ${money(budget)}`:"Set a budget above"}</div></div></div>`);
+  $("#main").html(`<div class="page-head mb-3"><div><h1 class="page-title">Savings</h1><div class="page-subtitle">Keep your savings protected from normal expenses.</div></div><div class="savings-head-icon"><i class="bi bi-piggy-bank-fill"></i></div></div><div class="cardx savings-hero-card mb-3"><div><div class="savings-hero-label"><i class="bi bi-lock-fill"></i> Protected savings</div><div class="savings-hero-amount">${money(st)}</div><div class="savings-hero-note">Normal expenses never reduce this amount.</div></div><div class="savings-hero-right"><div class="savings-available-label">Available for normal spending</div><strong>${money(avail)}</strong></div></div><div class="cardx savings-setup-card mb-3"><div class="savings-section-head"><div><h5>Savings setup</h5><p>Choose the reserve percentage and your monthly spending budget.</p></div><button id="resetSavingsBtn" type="button" class="btn btn-outline-danger savings-reset-btn"><i class="bi bi-arrow-counterclockwise"></i> Reset</button></div><div class="row g-3 align-items-end"><div class="col-12 col-md-4"><label class="form-label">Savings %</label><div class="input-group savings-input"><input id="savePercent" type="number" min="0" max="100" step="1" inputmode="numeric" class="form-control" value="${s.percent}"><span class="input-group-text">%</span></div></div><div class="col-12 col-md-4"><label class="form-label">Monthly expense budget</label><div class="input-group savings-input"><span class="input-group-text">₹</span><input id="monthlyBudget" type="number" min="0" step="0.01" inputmode="decimal" class="form-control" value="${s.monthlyBudget||0}"></div></div><div class="col-12 col-md-4"><button id="saveSetupBtn" class="btn btn-primary w-100 savings-save-btn">Save settings</button></div></div><div class="savings-reserve-box mt-3"><div><div class="small text-muted">Suggested reserve from current total</div><strong id="suggestedSavings">${money(total*(Number(s.percent)||0)/100)}</strong></div><button id="reserveBtn" class="btn btn-soft">Set / Update reserve</button></div><div class="small text-muted savings-reset-note mt-2"><i class="bi bi-info-circle"></i> Reset clears savings percentage, monthly budget and all protected savings categories. Your Cash/Bank balance is not changed.</div></div><div class="section-title">Savings categories</div><div class="row g-3"><div class="col-6 col-md-3"><div class="cardx savings-category-card"><div class="cat-icon"><i class="bi bi-wallet2" aria-hidden="true"></i></div><div class="cat-name">Main Savings</div><strong>${money(c.main)}</strong></div></div><div class="col-6 col-md-3"><div class="cardx savings-category-card"><div class="cat-icon"><i class="bi bi-shield-check" aria-hidden="true"></i></div><div class="cat-name">Emergency</div><strong>${money(c.emergency)}</strong></div></div><div class="col-6 col-md-3"><div class="cardx savings-category-card"><div class="cat-icon"><i class="bi bi-person-check" aria-hidden="true"></i></div><div class="cat-name">Personal</div><strong>${money(c.personal)}</strong></div></div><div class="col-6 col-md-3"><div class="cardx savings-category-card"><div class="cat-icon"><i class="bi bi-coin" aria-hidden="true"></i></div><div class="cat-name">Other Savings</div><strong>${money(c.other)}</strong></div></div></div><div class="row g-3 mt-1"><div class="col-12 col-lg-6"><div class="cardx savings-action-card h-100"><div class="savings-action-head"><div class="savings-action-icon"><i class="bi bi-arrow-left-right"></i></div><div><h6>Move inside savings</h6><p>Rearrange protected money between categories.</p></div></div><form id="saveMoveForm"><div class="row g-3"><div class="col-6"><label class="form-label">From</label><select id="saveFrom" class="form-select">${CATS.map(k=>`<option value="${k}">${CAT_LABEL[k]}</option>`).join("")}</select></div><div class="col-6"><label class="form-label">To</label><select id="saveTo" class="form-select">${CATS.map(k=>`<option value="${k}">${CAT_LABEL[k]}</option>`).join("")}</select></div><div class="col-7"><label class="form-label">Amount</label><div class="input-group savings-input"><span class="input-group-text">₹</span><input id="saveMoveAmount" type="number" min="0.01" step="0.01" inputmode="decimal" class="form-control" required></div></div><div class="col-5 d-flex align-items-end"><button class="btn btn-primary w-100">Move</button></div></div></form></div></div><div class="col-12 col-lg-6"><div class="cardx savings-action-card h-100"><div class="savings-action-head"><div class="savings-action-icon"><i class="bi bi-unlock-fill"></i></div><div><h6>Use savings</h6><p>Release protected money back to your available balance.</p></div></div><form id="saveWithdrawForm"><div class="row g-3"><div class="col-12 col-sm-6"><label class="form-label">Category</label><select id="saveWithdrawFrom" class="form-select">${CATS.map(k=>`<option value="${k}">${CAT_LABEL[k]}</option>`).join("")}</select></div><div class="col-12 col-sm-6"><label class="form-label">Amount</label><div class="input-group savings-input"><span class="input-group-text">₹</span><input id="saveWithdrawAmount" type="number" min="0.01" step="0.01" inputmode="decimal" class="form-control" required></div></div><div class="col-12"><button class="btn btn-primary w-100">Use savings</button></div></div></form></div></div></div><div class="cardx savings-budget-card mt-3"><div><div class="budget-title">This month</div><div class="small text-muted">Expense budget</div></div><div class="text-end"><strong>${budget?money(remaining):"Not set"}</strong><div class="small text-muted">${budget?`${money(monthExp)} spent of ${money(budget)}`:"Set a budget above"}</div></div></div>`);
   $("#savePercent").on("input",function(){const pct=Math.max(0,Math.min(100,Number(this.value)||0));$("#suggestedSavings").text(money(total*pct/100))});
 }
 function renderTutorial(){ /* tutorial.html contains its own static tutorial content */ }
@@ -556,7 +586,7 @@ function renderProfile(){
 function renderSettings(){
   const pref=userPreferences();
   const colors=Object.entries(THEME_COLORS).map(([k,v])=>`<option value="${k}" ${pref.themeColor===k?"selected":""}>${v.label}</option>`).join("");
-  $("#main").html(`<div class="mb-3"><h1 class="page-title">Settings</h1><div class="page-subtitle">Customize the look and feel of your TraHis app.</div></div><div class="cardx form-card settings-card"><div class="settings-heading"><div><h6 class="fw-bold mb-1">App Theme</h6><div class="small text-muted">Choose how the entire TraHis interface should look.</div></div><div class="settings-preview-dot"></div></div><div class="theme-choice-grid mt-3"><button type="button" class="theme-choice ${pref.visualStyle==="classic"?"active":""}" data-visual-style="classic"><span class="theme-choice-preview classic-preview"><span></span><span></span><span></span></span><span class="theme-choice-copy"><strong>Classic</strong><small>Clean &amp; simple</small></span><i class="bi bi-check-circle-fill theme-choice-check"></i></button><button type="button" class="theme-choice ${pref.visualStyle==="glass"?"active":""}" data-visual-style="glass"><span class="theme-choice-preview glass-preview"><span></span><span></span><span></span></span><span class="theme-choice-copy"><strong>Glassmorphism</strong><small>Frosted glass &amp; soft depth</small></span><i class="bi bi-check-circle-fill theme-choice-check"></i></button></div><div class="settings-glass-note mt-3"><i class="bi bi-stars"></i><div><strong>Glassmorphism</strong><div class="small text-muted">Applies the glass effect across headers, cards, forms, navigation, drawers and other major UI surfaces.</div></div></div></div><div class="cardx form-card mt-3"><div class="settings-heading"><div><h6 class="fw-bold mb-1">Appearance</h6><div class="small text-muted">Fine-tune the app after choosing a theme.</div></div></div><div class="row g-3 mt-1"><div class="col-12 col-md-6"><label class="form-label">Theme color</label><select id="themeColor" class="form-select">${colors}</select><div class="small text-muted mt-1">Changes the app accent color.</div></div><div class="col-12 col-md-6"><label class="form-label">Interface density</label><select id="densityMode" class="form-select"><option value="comfortable" ${pref.density==="comfortable"?"selected":""}>Comfortable</option><option value="compact" ${pref.density==="compact"?"selected":""}>Compact</option></select><div class="small text-muted mt-1">Compact uses tighter spacing; Comfortable gives more room.</div></div></div><div class="settings-theme-note mt-3"><i class="bi bi-moon-stars"></i><div><strong>Light / Dark mode</strong><div class="small text-muted">Use the Light / Dark button in the fixed header.</div></div></div></div>`);
+  $("#main").html(`<div class="mb-3"><h1 class="page-title">Settings</h1><div class="page-subtitle">Customize the look and feel of your TraHis app.</div></div><div class="cardx form-card settings-card"><div class="settings-heading"><div><h6 class="fw-bold mb-1">App Theme</h6><div class="small text-muted">Choose how the entire TraHis interface should look.</div></div><div class="settings-preview-dot"></div></div><div class="theme-choice-grid mt-3"><button type="button" class="theme-choice ${pref.visualStyle==="classic"?"active":""}" data-visual-style="classic"><span class="theme-choice-preview classic-preview"><span></span><span></span><span></span></span><span class="theme-choice-copy"><strong>Classic</strong><small>Clean &amp; simple</small></span><i class="bi bi-check-circle-fill theme-choice-check"></i></button><button type="button" class="theme-choice ${pref.visualStyle==="glass"?"active":""}" data-visual-style="glass"><span class="theme-choice-preview glass-preview"><span></span><span></span><span></span></span><span class="theme-choice-copy"><strong>Glassmorphism</strong><small>Frosted glass &amp; soft depth</small></span><i class="bi bi-check-circle-fill theme-choice-check"></i></button><button type="button" class="theme-choice ${pref.visualStyle==="neumorphism"?"active":""}" data-visual-style="neumorphism"><span class="theme-choice-preview neo-preview"><span></span><span></span><span></span></span><span class="theme-choice-copy"><strong>Neumorphism</strong><small>Soft raised surfaces</small></span><i class="bi bi-check-circle-fill theme-choice-check"></i></button><button type="button" class="theme-choice ${pref.visualStyle==="aurora"?"active":""}" data-visual-style="aurora"><span class="theme-choice-preview aurora-preview"><span></span><span></span><span></span></span><span class="theme-choice-copy"><strong>Aurora</strong><small>Colorful ambient glow</small></span><i class="bi bi-check-circle-fill theme-choice-check"></i></button><button type="button" class="theme-choice ${pref.visualStyle==="liquid-glass"?"active":""}" data-visual-style="liquid-glass"><span class="theme-choice-preview liquid-preview"><span></span><span></span><span></span></span><span class="theme-choice-copy"><strong>Liquid Glass</strong><small>Fluid translucent depth</small></span><i class="bi bi-check-circle-fill theme-choice-check"></i></button></div><div class="settings-glass-note mt-3"><i class="bi bi-palette2"></i><div><strong>App-wide visual style</strong><div class="small text-muted">The selected style is applied consistently to the header, cards, forms, navigation, drawers, dialogs, charts and other major surfaces.</div></div></div></div><div class="cardx form-card mt-3"><div class="settings-heading"><div><h6 class="fw-bold mb-1">Appearance</h6><div class="small text-muted">Fine-tune the app after choosing a theme.</div></div></div><div class="row g-3 mt-1"><div class="col-12 col-md-6"><label class="form-label">Theme color</label><select id="themeColor" class="form-select">${colors}</select><div class="small text-muted mt-1">Changes the app accent color.</div></div><div class="col-12 col-md-6"><label class="form-label">Interface density</label><select id="densityMode" class="form-select"><option value="comfortable" ${pref.density==="comfortable"?"selected":""}>Comfortable</option><option value="compact" ${pref.density==="compact"?"selected":""}>Compact</option></select><div class="small text-muted mt-1">Compact uses tighter spacing; Comfortable gives more room.</div></div></div><div class="settings-theme-note mt-3"><i class="bi bi-moon-stars"></i><div><strong>Light / Dark mode</strong><div class="small text-muted">Use the Light / Dark button in the fixed header.</div></div></div></div>`);
   $("#themeColor,#densityMode").on("change",function(){
     const pp=profile();
     if(!pp)return;
@@ -697,22 +727,39 @@ function drawChart(canvas,list,range="weekly"){
   $("#chartHint").html(`<span class="chart-legend"><span><i class="legend-dot income-dot"></i>Income</span><span><i class="legend-dot expense-dot"></i>Expense</span></span>`);
   $("#chartYearInfo").text(`${yearText} • ${rangeText}`);
 
-  const visibleSlots=7;
-  const slot=Math.max(48,Math.min(86,(host?.clientWidth||602)/visibleSlots));
+  // Keep a comfortable touch target on phones while allowing older periods to scroll horizontally.
+  // Desktop shows more columns at once; small screens deliberately use wider columns for legibility.
+  const viewportW=host?.clientWidth||320;
+  const isPhone=window.matchMedia && window.matchMedia("(max-width: 767.98px)").matches;
+  const visibleSlots=isPhone?6:9;
+  const slot=Math.max(isPhone?56:52,Math.min(isPhone?78:88,viewportW/visibleSlots));
   const minW=visibleSlots*slot;
-  const w=Math.max(minW,labels.length*slot+44);
-  const h=Math.max(205,canvas.clientHeight||205);
+  const w=Math.max(viewportW,labels.length*slot+56,minW);
+  const h=isPhone?225:Math.max(205,canvas.clientHeight||205);
   canvas.style.width=`${w}px`;canvas.style.height=`${h}px`;
-  canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  canvas.width=Math.max(1,Math.round(w*dpr));canvas.height=Math.max(1,Math.round(h*dpr));
   ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
 
-  const muted=getComputedStyle(document.documentElement).getPropertyValue("--muted").trim()||"#64748b";
-  const line=getComputedStyle(document.documentElement).getPropertyValue("--line").trim()||"#e2e8f0";
-  const incomeColor="#16a34a",expenseColor="#ef4444",markerColor="#94a3b8";
-  const padLeft=38,padRight=20,base=h-40,plotTop=18,plotH=base-plotTop;
+  const rootStyle=getComputedStyle(document.documentElement);
+  const muted=rootStyle.getPropertyValue("--muted").trim()||"#64748b";
+  const line=rootStyle.getPropertyValue("--line").trim()||"#e2e8f0";
+  const incomeColor=rootStyle.getPropertyValue("--chart-income").trim()||"#16a34a";
+  const expenseColor=rootStyle.getPropertyValue("--chart-expense").trim()||"#ef4444";
+  const markerColor=rootStyle.getPropertyValue("--chart-marker").trim()||"#94a3b8";
+  const padLeft=isPhone?32:38,padRight=isPhone?14:20,base=h-(isPhone?34:40),plotTop=16,plotH=base-plotTop;
   const max=Math.max(...income,...expense,1);
   const gap=(w-padLeft-padRight)/Math.max(labels.length,1);
-  const pairGap=Math.min(28,gap*.28),barW=Math.max(8,Math.min(24,(gap-pairGap)/2));
+  const pairGap=Math.min(isPhone?12:28,gap*(isPhone?.20:.28));
+  const barW=Math.max(isPhone?10:8,Math.min(isPhone?20:24,(gap-pairGap)/2));
+  const compactMoney=v=>{
+    const n=Number(v)||0;
+    if(!isPhone)return money(n);
+    const abs=Math.abs(n);
+    if(abs>=10000000)return `₹${(n/10000000).toFixed(abs>=100000000?0:1)}Cr`;
+    if(abs>=100000)return `₹${(n/100000).toFixed(abs>=1000000?0:1)}L`;
+    if(abs>=1000)return `₹${(n/1000).toFixed(abs>=10000?0:1)}k`;
+    return money(n);
+  };
 
   ctx.strokeStyle=line;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(padLeft,plotTop);ctx.lineTo(padLeft,base);ctx.lineTo(w-padRight,base);ctx.stroke();
   ctx.globalAlpha=.55;ctx.beginPath();ctx.moveTo(padLeft,plotTop+plotH/2);ctx.lineTo(w-padRight,plotTop+plotH/2);ctx.stroke();ctx.globalAlpha=1;
@@ -720,7 +767,7 @@ function drawChart(canvas,list,range="weekly"){
   // The first slot is the period immediately before the first real record.
   const markerX=padLeft+gap/2;
   ctx.save();ctx.setLineDash([4,4]);ctx.strokeStyle=markerColor;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(markerX,plotTop);ctx.lineTo(markerX,base);ctx.stroke();ctx.restore();
-  ctx.fillStyle=markerColor;ctx.font="700 9px system-ui";ctx.textAlign="center";ctx.fillText("START",markerX,plotTop+10);
+  ctx.fillStyle=markerColor;ctx.font=isPhone?"700 8px system-ui":"700 9px system-ui";ctx.textAlign="center";ctx.fillText("START",markerX,plotTop+10);
 
   labels.forEach((label,i)=>{
     const center=padLeft+i*gap+gap/2;
@@ -729,9 +776,20 @@ function drawChart(canvas,list,range="weekly"){
       const v=vals[j],bh=plotH*(v/max),x=center-(barW*2+pairGap)/2+j*(barW+pairGap),y=base-bh;
       ctx.fillStyle=color;
       if(typeof ctx.roundRect==="function"){ctx.beginPath();ctx.roundRect(x,y,barW,Math.max(2,bh),6);ctx.fill()}else{ctx.fillRect(x,y,barW,Math.max(2,bh))}
-      if(v>0){ctx.fillStyle=muted;ctx.font="700 8px system-ui";ctx.textAlign="center";ctx.fillText(money(v),x+barW/2,Math.max(14,y-4));}
+      if(v>0){
+        ctx.fillStyle=muted;
+        ctx.font=isPhone?"700 8px system-ui":"700 8px system-ui";
+        ctx.textAlign="center";
+        const valueText=compactMoney(v);
+        // Never let a value label collide with the bar pair or run outside the plot.
+        const labelY=Math.max(13,y-4);
+        ctx.fillText(valueText,x+barW/2,labelY,Math.max(34,barW+16));
+      }
     });
-    ctx.fillStyle=i===0?markerColor:muted;ctx.font="10px system-ui";ctx.textAlign="center";ctx.fillText(label,center,h-13);
+    ctx.fillStyle=i===0?markerColor:muted;
+    ctx.font=isPhone?"600 9px system-ui":"10px system-ui";
+    ctx.textAlign="center";
+    ctx.fillText(label,center,h-(isPhone?9:13),Math.max(40,gap-5));
   });
 
   if(host){host.style.minWidth="0";requestAnimationFrame(()=>{host.scrollLeft=Math.max(0,host.scrollWidth-host.clientWidth);});}
@@ -755,14 +813,17 @@ $(document).on("submit","#saveWithdrawForm",function(e){e.preventDefault();const
 $(document).on("click","[data-visual-style]",function(){
   const p=profile();
   if(!p)return;
-  const style=String($(this).attr("data-visual-style"))==="glass"?"glass":"classic";
+  const allowed=["classic","glass","neumorphism","aurora","liquid-glass"];
+  const style=String($(this).attr("data-visual-style"));
+  if(!allowed.includes(style))return;
   p.preferences=normalizePreferences(p.preferences);
-  if(p.preferences.visualStyle===style){applyPreferences(p.preferences);return;}
   p.preferences.visualStyle=style;
   save();
   applyPreferences(p.preferences);
-  renderSettings();
-  showToast(style==="glass"?"Glassmorphism theme enabled":"Classic theme enabled","success");
+  $("[data-visual-style]").removeClass("active");
+  $(`[data-visual-style="${style}"]`).addClass("active");
+  const labels={classic:"Classic",glass:"Glassmorphism",neumorphism:"Neumorphism",aurora:"Aurora","liquid-glass":"Liquid Glass"};
+  showToast(`${labels[style]} theme enabled`,"success");
 });
 $(document).on("submit","#profileForm",function(e){e.preventDefault();const p=profile(),u=user(),old={name:p.name,cash:p.cash,bank:p.bank};const name=$("#pName").val().trim(),cash=Number($("#pCash").val()),bank=Number($("#pBank").val());if(!name)return showToast("Name is required.","danger");if(!Number.isFinite(cash)||cash<0||!Number.isFinite(bank)||bank<0)return showToast("Opening balances must be zero or more.","danger");p.name=name;p.cash=cash;p.bank=bank;p.upi=bank;u.name=name;if(savingsTotal()>totalBalance()+0.00001){p.name=old.name;p.cash=old.cash;p.bank=old.bank;p.upi=old.bank;u.name=old.name;return showToast("Opening balance cannot be lower than protected savings.","danger")}save();showToast("Profile saved");shell();renderProfile()});
 $(document).on("submit","#passForm",function(e){e.preventDefault();const u=user(),old=$("#oldPass").val(),next=$("#newPass").val();if(old!==u.password)return showToast("Current password is incorrect.","danger");if(next.length<4)return showToast("New password must be at least 4 characters.","danger");if(next===old)return showToast("New password must be different.","danger");u.password=next;save();$("#oldPass,#newPass").val("");showToast("Password changed")});
@@ -826,6 +887,7 @@ $(document).on("click",".chart-range",function(){chartRange=$(this).data("range"
 $(window).on("resize",()=>{if(currentRoute==="dashboard")drawChart($("#miniChart")[0],txs(),chartRange)});
 
 initPWA();
+bindInternalNavigation();
 const storedSession=sessionStorage.getItem(SESSION_KEY);
 const rememberedSession=localStorage.getItem(REMEMBER_SESSION_KEY);
 if(storedSession)state.session=storedSession;
